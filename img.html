@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Spark Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .scene-container {
+            width: 100%;
+            height: 300px;
+            position: relative;
+            margin-bottom: 40px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            background-color: white;
+            overflow: hidden;
+        }
+        
+        .scene-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        /* Stickman styling */
+        .stickman {
+            position: absolute;
+            bottom: 50px;
+        }
+        
+        .head {
+            width: 30px;
+            height: 30px;
+            background-color: black;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .body {
+            width: 4px;
+            height: 50px;
+            background-color: black;
+            position: absolute;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .arm {
+            width: 4px;
+            height: 30px;
+            background-color: black;
+            position: absolute;
+            top: 35px;
+        }
+        
+        .arm.left {
+            left: -10px;
+            transform: rotate(20deg);
+            transform-origin: top center;
+        }
+        
+        .arm.right {
+            right: -10px;
+            transform: rotate(-20deg);
+            transform-origin: top center;
+        }
+        
+        .leg {
+            width: 4px;
+            height: 40px;
+            background-color: black;
+            position: absolute;
+            top: 80px;
+        }
+        
+        .leg.left {
+            left: 8px;
+            transform-origin: top center;
+        }
+        
+        .leg.right {
+            right: 8px;
+            transform-origin: top center;
+        }
+        
+        .label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        /* House styling */
+        .house {
+            position: absolute;
+            bottom: 50px;
+            right: 100px;
+            width: 80px;
+            height: 60px;
+        }
+        
+        .house-body {
+            width: 60px;
+            height: 40px;
+            background-color: #ff9999;
+            position: absolute;
+            bottom: 0;
+            left: 10px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .house-roof {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 30px solid #cc6666;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .house-door {
+            width: 15px;
+            height: 25px;
+            background-color: #663300;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        /* Money/Phone styling */
+        .money {
+            width: 30px;
+            height: 20px;
+            background-color: #33cc33;
+            border-radius: 3px;
+            position: absolute;
+            top: 35px;
+            right: -35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .phone {
+            width: 20px;
+            height: 30px;
+            background-color: #333;
+            border-radius: 3px;
+            position: absolute;
+            top: 35px;
+            right: -30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 8px;
+        }
+        
+        /* Animations */
+        @keyframes walk {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(10deg);
+            }
+            75% {
+                transform: rotate(-10deg);
+            }
+        }
+        
+        @keyframes walkArmLeft {
+            0%, 100% {
+                transform: rotate(30deg);
+            }
+            50% {
+                transform: rotate(10deg);
+            }
+        }
+        
+        @keyframes walkArmRight {
+            0%, 100% {
+                transform: rotate(-30deg);
+            }
+            50% {
+                transform: rotate(-10deg);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        @keyframes point {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(-90deg);
+            }
+        }
+        
+        @keyframes moveRight {
+            to {
+                left: 100%;
+            }
+        }
+        
+        /* Scene 1 animations */
+        #agent-scene1 {
+            left: 50px;
+        }
+        
+        #client-scene1 {
+            left: 200px;
+        }
+        
+        .scene1-animate #agent-scene1 {
+            animation: moveRight 3s forwards;
+        }
+        
+        .scene1-animate #agent-scene1 .arm.right {
+            animation: point 1.5s 1.5s forwards;
+        }
+        
+        .scene1-animate #client-scene1 {
+            animation: moveRight 3s 3s forwards;
+        }
+        
+        /* Scene 2 animations */
+        #momo-agent {
+            left: 100px;
+        }
+        
+        #client-scene2 {
+            left: 300px;
+        }
+        
+        .scene2-animate #client-scene2 {
+            animation: bounce 1s 2s 2;
+        }
+        
+        /* Controls */
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #333;">Agent Spark Demo</h1>
+    
+    <!-- Scene 1: Agent Helping Client Find a House -->
+    <h2 class="scene-title">Scene 1: Agent Helping Client Find a House</h2>
+    <div class="scene-container" id="scene1">
+        <div class="stickman" id="agent-scene1">
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+            <div class="label">Agent</div>
+        </div>
+        
+        <div class="stickman" id="client-scene1">
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+            <div class="label">Client</div>
+        </div>
+        
+        <div class="house">
+            <div class="house-roof"></div>
+            <div class="house-body"></div>
+            <div class="house-door"></div>
+        </div>
+    </div>
+    
+    <!-- Scene 2: Client Receiving Money from MoMo Agent -->
+    <h2 class="scene-title">Scene 2: Client Receiving Money from MoMo Agent</h2>
+    <div class="scene-container" id="scene2">
+        <div class="stickman" id="momo-agent">
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+            <div class="label">MoMo Agent</div>
+            <div class="phone">MoMo</div>
+        </div>
+        
+        <div class="stickman" id="client-scene2">
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="arm left"></div>
+            <div class="arm right"></div>
+            <div class="leg left"></div>
+            <div class="leg right"></div>
+            <div class="label">Client</div>
+            <div class="money">$$</div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <button onclick="animateScene1()">Play Scene 1</button>
+        <button onclick="animateScene2()">Play Scene 2</button>
+        <button onclick="resetScenes()">Reset All</button>
+    </div>
+    
+    <script>
+        function animateScene1() {
+            resetScenes();
+            document.getElementById('scene1').classList.add('scene1-animate');
+            
+            // Animate legs for walking
+            const legs = document.querySelectorAll('#scene1 .leg');
+            legs.forEach(leg => {
+                leg.style.animation = 'walk 0.5s infinite';
+            });
+            
+            // Animate arms for walking
+            document.querySelectorAll('#scene1 .arm.left').forEach(arm => {
+                arm.style.animation = 'walkArmLeft 0.5s infinite';
+            });
+            document.querySelectorAll('#scene1 .arm.right').forEach(arm => {
+                arm.style.animation = 'walkArmRight 0.5s infinite';
+            });
+        }
+        
+        function animateScene2() {
+            resetScenes();
+            document.getElementById('scene2').classList.add('scene2-animate');
+            
+            // Animate money transfer
+            setTimeout(() => {
+                const money = document.querySelector('.money');
+                money.style.transition = 'all 1s';
+                money.style.right = '35px';
+            }, 1000);
+        }
+        
+        function resetScenes() {
+            // Reset scene 1
+            document.getElementById('scene1').classList.remove('scene1-animate');
+            const scene1Stickmen = document.querySelectorAll('#scene1 .stickman');
+            scene1Stickmen.forEach(stickman => {
+                stickman.style.left = '';
+                stickman.style.animation = '';
+            });
+            
+            const scene1Arms = document.querySelectorAll('#scene1 .arm');
+            scene1Arms.forEach(arm => {
+                arm.style.animation = '';
+                arm.style.transform = '';
+            });
+            
+            const scene1Legs = document.querySelectorAll('#scene1 .leg');
+            scene1Legs.forEach(leg => {
+                leg.style.animation = '';
+                leg.style.transform = '';
+            });
+            
+            // Reset scene 2
+            document.getElementById('scene2').classList.remove('scene2-animate');
+            const money = document.querySelector('.money');
+            if (money) {
+                money.style.right = '-35px';
+                money.style.transition = '';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agent Spark - Auth</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .auth-container {
+      background-color: #fff;
+      padding: 10rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 660px;
+    }
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+    }
+    .tab {
+      padding-bottom: 0.5rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+    .tab.active {
+      border-bottom: 2px solid #2563eb;
+      color: #2563eb;
+    }
+    h2 {
+      margin: 0 0 1rem;
+      font-size: 1.5rem;
+      color: #111827;
+      text-align: center;
+    }
+    input {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    #google-login-btn {
+      background-color: #4285F4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    #google-login-btn:hover {
+      background-color: #357ae8;
+    }
+    #google-login-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('signup')">Sign Up</div>
+      <div class="tab" onclick="showTab('login')">Login</div>
+    </div>
+
+    <div id="signup-form">
+      <input type="email" id="signup-email" placeholder="Email Address" />
+      <input type="password" id="signup-password" placeholder="Password" />
+      <button onclick="signUp()">Create Account</button>
+    </div>
+
+    <div id="login-form" class="hidden">
+      <input type="email" id="login-email" placeholder="Email Address" />
+      <input type="password" id="login-password" placeholder="Password" />
+      <button onclick="login()">Log In</button>
+    </div>
+
+    <button id="google-login-btn" type="button" aria-label="Sign in with Google">
+      <svg viewBox="0 0 533.5 544.3" xmlns="http://www.w3.org/2000/svg">
+        <path d="M533.5 278.4c0-17.6-1.5-34.4-4.3-50.7H272v95.9h146.8c-6.3 34-25.5 62.8-54.7 82v68h88.4c51.6-47.5 81.9-117.8 81.9-195.2z" fill="#4285F4"/>
+        <path d="M272 544.3c73.7 0 135.6-24.3 180.9-66.1l-88.4-68c-24.6 16.4-56.1 26-92.4 26-71 0-131.2-47.9-152.8-112.4H30.5v70.4C75.4 477.6 166.7 544.3 272 544.3z" fill="#34A853"/>
+        <path d="M119.2 324.8c-5.3-15.8-8.3-32.7-8.3-50.1s3-34.3 8.3-50.1v-70.4H30.5c-18.6 37.7-29.3 79.7-29.3 124.5s10.7 86.8 29.3 124.5l88.7-70.4z" fill="#FBBC04"/>
+        <path d="M272 107.7c39.9 0 75.8 13.7 104 40.7l78-78C399 24.8 337.1 0 272 0 166.7 0 75.4 66.7 30.5 167.3l88.7 70.4c21.6-64.5 81.8-112.4 152.8-112.4z" fill="#EA4335"/>
+      </svg>
+      Continue with Google
+    </button>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://qzddjvloicjwshggzctt.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRqdmxvaWNqd3NoZ2d6Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDk5MzMsImV4cCI6MjA2NDk4NTkzM30.mkrERrCanIkNnIlch5UJ-OOJ9az7oXs1EFZijkf7y7o';
+
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    function showTab(tab) {
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('#signup-form, #login-form').forEach(el => el.classList.add('hidden'));
+
+      if (tab === 'signup') {
+        document.getElementById('signup-form').classList.remove('hidden');
+        document.querySelector('.tab:nth-child(1)').classList.add('active');
+      } else {
+        document.getElementById('login-form').classList.remove('hidden');
+        document.querySelector('.tab:nth-child(2)').classList.add('active');
+      }
+    }
+
+    async function signUp() {
+      const email = document.getElementById("signup-email").value.trim();
+      const password = document.getElementById("signup-password").value.trim();
+
+      if (!email || !password) return alert("Please enter both email and password.");
+
+      const { error } = await client.auth.signUp({ email, password });
+
+      if (error) {
+        alert("Sign Up Error: " + error.message);
+        console.error(error);
+      } else {
+        alert("Sign up successful. Check your email to confirm.");
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("login-email").value.trim();
+      const password = document.getElementById("login-password").value.trim();
+
+      if (!email || !password) return alert("Please enter both email and password.");
+
+      const { data, error } = await client.auth.signInWithPassword({ email, password });
+
+      if (error) {
+        alert("Login Error: " + error.message);
+        console.error(error);
+      } else {
+        alert("Login successful.");
+        window.location.href = "Homepage.html";
+      }
+    }
+
+    document.getElementById('google-login-btn').onclick = async () => {
+  const { error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: 'Home Page.html'
+    }
+  });
+  if (error) {
+    alert('Google login error: ' + error.message);
+    console.error(error);
+  }
+};
+
+  </script>
+</body>
+</html>

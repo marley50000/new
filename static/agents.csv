@@ -1,0 +1,6 @@
+full_name,phone,email,location,verified,category,document_url,created_at,name
+Ama Boateng,+233501234567,ama.boateng@example.com,"Accra, Ghana",TRUE,Real Estate,https://example.com/docs/ama.pdf,2025-06-11 10:00:00,Ama
+Kwame Mensah,+233541234567,kwame.mensah@example.com,"Kumasi, Ghana",FALSE,Insurance,https://example.com/docs/kwame.pdf,2025-06-11 10:00:00,Kwame
+Akosua Asante,+233271234567,akosua.asante@example.com,"Takoradi, Ghana",TRUE,Legal Services,https://example.com/docs/akosua.pdf,2025-06-11 10:00:00,Akosua
+Yaw Ofori,+233591234567,yaw.ofori@example.com,"Tamale, Ghana",FALSE,Accounting,https://example.com/docs/yaw.pdf,2025-06-11 10:00:00,Yaw
+Esi Nyarko,+233301234567,esi.nyarko@example.com,"Cape Coast, Ghana",TRUE,Consulting,https://example.com/docs/esi.pdf,2025-06-11 10:00:00,Esi

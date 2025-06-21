@@ -1,0 +1,399 @@
+<html lang="en" class="scroll-smooth">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Verified Agents Ghana
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter&amp;display=swap" rel="stylesheet"/>
+  <style>
+   body {
+      font-family: 'Inter', sans-serif;
+    }
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1.2s ease-out forwards; /* Increased duration */
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .agent-card {
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 1s ease-out forwards;
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+ </head>
+ <body class="bg-[#f0f5fa] min-h-screen p-4 sm:p-6 md:p-10">
+  <main class="max-w-7xl mx-auto fade-in">
+   <section class="fade-in mb-10 text-center">
+    <h1 class="text-3xl font-semibold mb-4 fade-in">
+     Find verified agents in Ghana
+    </h1>
+    <form class="max-w-md mx-auto relative fade-in" id="searchForm">
+     <input aria-label="Find agents near you" class="w-full rounded-lg py-3 px-4 pr-12 text-gray-700 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 focus:shadow-md" placeholder="Find agents near you..." type="search" id="searchInput"/>
+     <button aria-label="Search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-900 transition-transform duration-200 active:scale-95" type="submit" id="searchButton">
+      <i class="fas fa-search fa-lg"></i>
+     </button>
+    </form>
+    <div id="searchResults" class="mt-4 text-gray-700"></div>
+    <nav class="mt-8 flex justify-center gap-4 flex-wrap fade-in">
+     <button aria-label="Rentals" class="bg-white rounded-xl shadow-md w-20 h-20 flex flex-col items-center justify-center gap-1 hover:shadow-lg transition-shadow">
+      <i class="fas fa-home text-blue-600 text-2xl">
+      </i>
+      <span class="text-sm font-normal text-black">
+       Rentals
+      </span>
+     </button>
+     <button aria-label="Insurance" class="bg-white rounded-xl shadow-md w-20 h-20 flex flex-col items-center justify-center gap-1 hover:shadow-lg transition-shadow">
+      <i class="fas fa-shield-alt text-blue-600 text-2xl"></i> <!-- Updated icon -->
+      <span class="text-sm font-normal text-black">
+       Insurance
+      </span>
+     </button>
+     <button aria-label="Legal Help" class="bg-white rounded-xl shadow-md w-20 h-20 flex flex-col items-center justify-center gap-1 hover:shadow-lg transition-shadow">
+      <i class="fas fa-gavel text-blue-600 text-2xl"></i> <!-- Updated icon -->
+      <span class="text-sm font-normal text-black">
+       Legal Help
+      </span>
+     </button>
+     <button aria-label="Visa" class="bg-white rounded-xl shadow-md w-20 h-20 flex flex-col items-center justify-center gap-1 hover:shadow-lg transition-shadow">
+      <i class="fas fa-passport text-blue-600 text-2xl"></i> <!-- Updated icon -->
+      <span class="text-sm font-normal text-black">
+       Visa
+      </span>
+     </button>
+     <button aria-label="Others" class="bg-white rounded-xl shadow-md w-14 h-20 flex flex-col items-center justify-center gap-1 hover:shadow-lg transition-shadow">
+      <span class="text-2xl font-bold text-black">
+       ...
+      </span>
+      <span class="text-sm font-normal text-black">
+       Others
+      </span>
+     </button>
+    </nav>
+   </section>
+   <section aria-label="Featured Agents" class="bg-white rounded-3xl p-6 mb-10 max-w-full overflow-x-auto fade-in">
+    <h2 class="text-xl font-semibold mb-6 fade-in">
+     Featured Agents
+    </h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-full min-w-[320px] fade-in">
+     <!-- Agent 1 -->
+     <article class="agent-card bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col transform transition duration-300 hover:-translate-y-1 hover:shadow-xl fade-in">
+      <img alt="Portrait of a smiling young black man wearing a dark blazer" class="w-full object-cover aspect-square" height="300" loading="lazy" src="IMAGES\IMG_DV SPARK.jpg" width="300"/>
+      <div class="p-3 flex flex-col gap-1">
+       <h3 class="font-semibold text-base">
+        Spark Dzakpasu
+       </h3>
+       <p class="text-sm flex items-center gap-1 text-yellow-500">
+        <i class="fas fa-star">
+        </i>
+        5.0
+        |
+        </i>
+        100%
+       </p>
+       <p class="text-xs text-gray-800">
+        Business Visionary
+       </p>
+       <button aria-label="Top Rated Samuel Owusu" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm flex items-center justify-center gap-2 w-full transition-transform duration-200 active:scale-95">
+        <i class="fas fa-dollar-sign">
+        </i>
+        Contact
+       </button>
+      </div>
+     </article>
+     <!-- Agent 2 -->
+     <article aria-label="Evelyn Mensah profile" class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+      <img alt="Portrait of a smiling young black woman with long hair wearing a light gray blazer" class="w-full object-cover aspect-square" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/53951b60-d07b-4dad-73ae-86004994334a.jpg" width="300"/>
+      <div class="p-3 flex flex-col gap-1">
+       <h3 class="font-semibold text-base">
+        Evelyn Mensah
+       </h3>
+       <p class="text-sm flex items-center gap-1 text-yellow-500">
+        <i class="fas fa-star">
+        </i>
+        4.5
+        <i class="fas fa-star">
+        </i>
+        45
+       </p>
+       <p class="text-xs text-gray-800">
+        Insurance Brocker
+       </p>
+       <button aria-label="Acmara Evelyn Mensah" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm w-full">
+        View Profile
+       </button>
+      </div>
+     </article>
+     <!-- Agent 3 -->
+     <article aria-label="Richard Asare profile" class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+      <img alt="Portrait of a smiling young black man wearing a blue shirt and dark blazer" class="w-full object-cover aspect-square" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/80f67bf0-f774-4353-eb88-7afa6029db7c.jpg" width="300"/>
+      <div class="p-3 flex flex-col gap-1">
+       <h3 class="font-semibold text-base">
+        Richard Asare
+       </h3>
+       <p class="text-sm flex items-center gap-1 text-yellow-500">
+        <i class="fas fa-star">
+        </i>
+        4.7
+        <i class="fas fa-play">
+        </i>
+       </p>
+       <p class="text-xs text-gray-800">
+        Lawyer
+       </p>
+       <button aria-label="View Profile Richard Asare" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm w-full">
+        View Profile
+       </button>
+      </div>
+     </article>
+     <!-- Agent 4 -->
+     <article aria-label="Anita Darko profile" class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+      <img alt="Portrait of a smiling young black woman with long hair wearing a light gray blazer" class="w-full object-cover aspect-square" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/53951b60-d07b-4dad-73ae-86004994334a.jpg" width="300"/>
+      <div class="p-3 flex flex-col gap-1">
+       <h3 class="font-semibold text-base">
+        Anita Darko
+       </h3>
+       <p class="text-sm flex items-center gap-1 text-yellow-500">
+        <i class="fas fa-star">
+        </i>
+        4.6
+        <i class="fas fa-star">
+        </i>
+        4.5
+       </p>
+       <p class="text-xs text-gray-800">
+        Travel Consultant
+       </p>
+       <button aria-label="View Profile Anita Darko" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm w-full">
+        View Profile
+       </button>
+      </div>
+     </article>
+    </div>
+    <section aria-label="Why Choose Verified Agents" class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-6">
+     <h3 class="text-xl font-semibold w-full sm:w-auto">
+      Why Choose Verified Agents?
+     </h3>
+     <ul class="flex flex-col sm:flex-row gap-6 w-full sm:w-auto text-sm text-gray-900 font-normal">
+      <li class="flex items-center gap-2">
+       <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 12l2 2 4-4m1-5a9 9 0 1 1-8 0 9 9 0 0 1 8 0z">
+        </path>
+       </svg>
+       Verified Professionals
+      </li>
+      <li class="flex items-center gap-2">
+       <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.5 3.5a.75.75 0 0 1 1.5 0v5.25h5.25a.75.75 0 0 1 0 1.5H12v5.25a.75.75 0 0 1-1.5 0V10.25H5.25a.75.75 0 0 1 0-1.5H10.5V3.5z">
+        </path>
+       </svg>
+       Trusted by Users
+      </li>
+      <li class="flex items-center gap-2">
+       <svg class="w-6 h-6 text-gray-600" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6l-6-4H6zM6 6h7v4h4v10H6V6z">
+        </path>
+       </svg>
+       Peace of Mind
+      </li>
+     </ul>
+    </section>
+   </section>
+   <!-- New "Post a Request" Section -->
+   <section aria-label="Post a Request" class="bg-white rounded-3xl p-6 mb-10 max-w-full overflow-x-auto fade-in">
+    <h2 class="text-xl font-semibold mb-6 fade-in">
+     Post a Request
+    </h2>
+    <form id="requestForm" class="fade-in">
+     <textarea aria-label="Describe your needs" class="w-full rounded-lg py-3 px-4 text-gray-700 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 focus:shadow-md" placeholder="Describe your needs..." rows="4"></textarea>
+     <button type="submit" class="mt-3 bg-blue-600 text-white rounded-md py-2 px-6 text-base w-full max-w-xs">
+      Post Request
+     </button>
+    </form>
+   </section>
+   <!-- New "How It Works" Section -->
+   <section aria-label="How It Works" class="bg-white rounded-3xl p-6 mb-10 max-w-full overflow-x-auto fade-in">
+    <h2 class="text-xl font-semibold mb-6 fade-in">
+     How It Works
+    </h2>
+    <p class="text-base text-gray-800 mb-4 fade-in">
+     Browse agent categories, view detailed profiles, and connect directly with trusted professionals who meet your needs. Our platform simplifies your search so you can focus on making informed decisions with confidence.
+    </p>
+   </section>
+   <section class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-full">
+    <!-- Left panel -->
+    <section aria-label="VerifiedHub search and list" class="bg-white rounded-3xl p-6 max-w-full overflow-x-auto">
+     <header class="flex justify-between items-center mb-4">
+      <div class="flex items-center gap-2 text-lg font-semibold text-gray-900">
+       <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 6h18v12H3zM3 6l9 6 9-6" fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="2">
+        </path>
+        <path d="M3 6v12h18V6">
+        </path>
+       </svg>
+       Verified
+       <span class="text-blue-600">
+        Hub
+       </span>
+      </div>
+      <span class="text-xs text-gray-600">
+       For Agents
+      </span>
+     </header>
+     <form class="mb-4">
+      <input aria-label="Find agents in Accra" class="w-full rounded-lg py-3 px-4 text-gray-700 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Find agents in Accra..." type="search"/>
+     </form>
+     <nav class="flex gap-3 mb-6 flex-wrap">
+      <button aria-label="Category filter" class="bg-[#f7f9fc] rounded-md py-2 px-4 text-sm text-gray-900 font-normal">
+       Category
+       <i class="fas fa-chevron-down ml-1">
+       </i>
+      </button>
+      <button aria-label="Rating filter" class="bg-[#f7f9fc] rounded-md py-2 px-4 text-sm text-gray-900 font-normal">
+       Rating
+      </button>
+      <button aria-label="Verified Only filter" class="bg-[#f7f9fc] rounded-md py-2 px-4 text-sm text-gray-900 font-normal">
+       Verified Only
+      </button>
+     </nav>
+     <p class="mb-4 font-semibold text-gray-900 text-sm">
+      Sort rang in Accra...
+     </p>
+     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 min-w-[320px]">
+      <!-- Agent 1 -->
+      <article aria-label="Kofi Boateng profile" class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+       <img alt="Portrait of a smiling young black man wearing a dark blazer" class="w-full object-cover aspect-square" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/b4284216-158c-4d45-2122-19441b673e17.jpg" width="300"/>
+       <div class="p-3 flex flex-col gap-1">
+        <h3 class="font-semibold text-base">
+         Kofi Boateng
+        </h3>
+        <p class="text-sm flex items-center gap-1 text-yellow-500">
+         <i class="fas fa-star">
+         </i>
+         4.5
+         <i class="fas fa-star">
+         </i>
+        </p>
+        <p class="text-xs text-gray-800">
+         Rentals
+        </p>
+        <button aria-label="View Profile Kofi Boateng" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm w-full">
+         View Profile
+        </button>
+       </div>
+      </article>
+      <!-- Agent 2 -->
+      <article aria-label="Daniel Tettetr profile" class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+       <img alt="Portrait of a smiling young black man wearing a white shirt" class="w-full object-cover aspect-square" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/f56de99c-41ed-4a06-1e8f-f4b0729d5fd8.jpg" width="300"/>
+       <div class="p-3 flex flex-col gap-1">
+        <h3 class="font-semibold text-base">
+         Daniel Tettetr
+        </h3>
+        <p class="text-sm flex items-center gap-1 text-yellow-500">
+         <i class="fas fa-star">
+         </i>
+         4.1
+        </p>
+        <p class="text-xs text-gray-800">
+         Rentals
+        </p>
+        <button aria-label="View Profile Daniel Tettetr" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm w-full">
+         View Profile
+        </button>
+       </div>
+      </article>
+      <!-- Agent 3 -->
+      <article aria-label="Sandra Gyasi profile" class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+       <img alt="Portrait of a smiling young black woman with long hair wearing a light gray blazer" class="w-full object-cover aspect-square" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/53951b60-d07b-4dad-73ae-86004994334a.jpg" width="300"/>
+       <div class="p-3 flex flex-col gap-1">
+        <h3 class="font-semibold text-base">
+         Sandra Gyasi
+        </h3>
+        <p class="text-sm flex items-center gap-1 text-yellow-500">
+         <i class="fas fa-star">
+         </i>
+         45
+        </p>
+        <p class="text-xs text-gray-800">
+         Recials
+        </p>
+        <button aria-label="Book Sandra Gyasi" class="mt-3 bg-blue-600 text-white rounded-md py-1.5 px-4 text-sm w-full">
+         Book
+        </button>
+       </div>
+      </article>
+     </div>
+    </section>
+    <!-- Right panel -->
+    <section aria-label="Kofi Boateng profile details" class="bg-white rounded-3xl p-6 max-w-full overflow-x-auto">
+     <button aria-label="Back" class="mb-4 text-gray-900 text-xl font-semibold flex items-center gap-2">
+      <i class="fas fa-arrow-left">
+      </i>
+     </button>
+     <img alt="Portrait of a smiling young black man wearing a blue shirt" class="w-full rounded-xl object-cover aspect-[4/3]" height="300" loading="lazy" src="https://storage.googleapis.com/a1aa/image/9141c1bc-d790-4463-cb71-749cf4ed488f.jpg" width="400"/>
+     <h3 class="text-2xl font-bold mt-4 mb-1">
+      Kofi Boateng
+     </h3>
+     <p class="text-yellow-500 flex items-center gap-2 mb-2 text-lg">
+      <i class="fas fa-star">
+      </i>
+      4.6
+      <i class="fas fa-star">
+      </i>
+      4.8
+     </p>
+     <div class="flex items-center gap-4 mb-4 flex-wrap">
+      <span aria-label="Professionally Verified" class="bg-blue-600 text-white rounded-md py-1 px-3 text-sm flex items-center gap-2">
+       <i class="fas fa-info-circle">
+       </i>
+       Professionally Verified
+      </span>
+      <span class="text-gray-900 font-normal text-sm">
+       Accra
+      </span>
+     </div>
+     <section>
+      <h4 class="font-semibold text-lg mb-2">
+       Services Offered
+      </h4>
+      <ul class="list-disc list-inside space-y-1 text-gray-900 font-normal text-base">
+       <li>
+        Assist in find apartaments
+       </li>
+       <li>
+        Houses, and commercial spaces
+       </li>
+      </ul>
+     </section>
+     <section class="mt-6">
+      <h4 class="font-semibold text-lg mb-2">
+       Book
+      </h4>
+      <button aria-label="Book Kofi Boateng" class="bg-blue-600 text-white rounded-md py-2 px-6 text-base w-full max-w-xs">
+       Book
+      </button>
+     </section>
+    </section>
+   </section>
+  </main>
+  <script src="script.js"></script> <!-- Link to the external JavaScript file -->
+ </body>
+</html>
