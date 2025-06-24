@@ -112,7 +112,7 @@
             </div>
             <h2 class="text-2xl font-bold text-gray-900 mb-2">Success!</h2>
             <p class="text-gray-600 mb-4">Agent has been registered successfully.</p>
-            <div class="text-sm text-gray-500">Redirecting back to form...</div>
+            <div class="text-sm text-gray-500">Redirecting back to homepage...</div>
         </div>
     </div>
 
@@ -245,7 +245,7 @@
                                 
                                 <div id="imagePreview" class="hidden">
                                     <div class="relative image-preview-container group">
-                                        <img id="previewImage" src="" alt="Agent preview" class="w-full max-w-xs mx-auto rounded-lg shadow-md border-2 border-gray-200">
+                                        <img id="previewImage" src="" alt="Agent preview" class="w-full max-w-xs mx-auto rounded-lg shadow-md border-2 border-gray-200 object-cover object-top aspect-square">
                                         <div class="image-preview-overlay">
                                             <button type="button" id="removeImageBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center gap-2">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,6 +256,7 @@
                                         </div>
                                     </div>
                                     <p class="text-sm text-gray-600 text-center mt-2">Click on the image to change it</p>
+                                    <p class="text-xs text-gray-500 text-center mt-1">For best results, upload a clear headshot or a photo where your face is centered.</p>
                                 </div>
                             </div>
                         </div>
@@ -635,7 +636,7 @@
                     .from('agents')
                     .update({ 
                         photo_path: photoPath,
-                       
+                        video_path: videoPath // This line ensures the video path is saved to the database
                     })
                     .eq('id', agentId);
 
@@ -647,18 +648,11 @@
                 mainApp.classList.add('hidden');
                 successScreen.classList.remove('hidden');
 
-                // Reset after 3 seconds
+                // Redirect after 3 seconds
                 setTimeout(() => {
-                    agentForm.reset();
-                    hideImagePreview();
-                    retakeVideo();
-                    submitBtn.innerHTML = 'Register Agent';
-                    submitBtn.disabled = false;
-                    uploadProgress.classList.add('hidden');
-                    progressBar.style.width = '0%';
-                    successScreen.classList.add('hidden');
-                    mainApp.classList.remove('hidden');
-                }, 3000);
+                    // Navigate to a new page
+                    window.location.href = 'Homepage.html'; // <--- Change this to your desired page path
+                }, 3000); // Redirect after 3 seconds
 
             } catch (error) {
                 alert("Error: " + error.message);
