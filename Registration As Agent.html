@@ -271,28 +271,26 @@
                             </label>
                             
                             <div class="flex justify-center">
-                                <div class="video-wrapper bg-black rounded-lg overflow-hidden" style="width: 100%; max-width: 640px;">
-                                    <div class="video-content-absolute">
-                                        <video id="videoElement" class="w-full h-full object-cover" autoplay muted playsinline></video>
-                                        <video id="playbackVideo" class="w-full h-full object-cover hidden" controls></video>
-                                        
-                                        <div id="controlsOverlay" class="controls-overlay">
-                                            <div id="timer" class="timer text-white text-xl bg-black/50 px-3 py-1 rounded-full hidden">
-                                                00:00
-                                            </div>
-                                            
-                                            <button id="recordBtn" class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full transition-all duration-200 flex items-center justify-center shadow-lg">
-                                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                    <circle cx="12" cy="12" r="10"/>
-                                                </svg>
-                                            </button>
-                                            
-                                            <button id="stopBtn" class="hidden bg-gray-700 hover:bg-gray-800 text-white p-4 rounded-full transition-all duration-200">
-                                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                    <rect x="6" y="6" width="12" height="12"/>
-                                                </svg>
-                                            </button>
+                                <div class="video-container bg-black rounded-lg overflow-hidden" style="width: 100%; max-width: 640px; aspect-ratio: 16/9;">
+                                    <video id="videoElement" class="w-full h-full object-cover" autoplay muted playsinline></video>
+                                    <video id="playbackVideo" class="w-full h-full object-cover hidden" controls></video>
+                                    
+                                    <div id="controlsOverlay" class="controls-overlay">
+                                        <div id="timer" class="timer text-white text-xl bg-black/50 px-3 py-1 rounded-full hidden">
+                                            00:00
                                         </div>
+                                        
+                                        <button id="recordBtn" class="bg-red-500 hover:bg-red-600 text-white p-4 rounded-full transition-all duration-200 flex items-center justify-center shadow-lg">
+                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="12" cy="12" r="10"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <button id="stopBtn" class="hidden bg-gray-700 hover:bg-gray-800 text-white p-4 rounded-full transition-all duration-200">
+                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <rect x="6" y="6" width="12" height="12"/>
+                                            </svg>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
