@@ -366,19 +366,26 @@
 
         // Initialize camera
         async function initCamera() {
+            videoElement.classList.remove('hidden'); // Ensure video element is visible
+            if (stream) { // Prevent re-initializing if stream already exists
+                return;
+            }
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
-                    }, 
-                    audio: true 
+                    },
+                    audio: true
                 });
                 videoElement.srcObject = stream;
+                await videoElement.play(); // Explicitly play the video element to ensure it starts
                 videoStatusText.textContent = "Camera ready - Click record to start";
+                recordBtn.disabled = false; // Enable record button once camera is ready
             } catch (error) {
                 console.error('Error accessing camera:', error);
-                videoStatusText.textContent = "Camera access denied. Please allow camera permissions.";
+                videoStatusText.textContent = "Camera access denied or unavailable. Click record to try again.";
+                recordBtn.disabled = false; // Ensure button is enabled for retry
             }
         }
 
@@ -406,7 +413,72 @@
         }
 
         // Video recording functions
-        function startRecording() {
+        async function startRecording() { // Made async to await initCamera
+            videoElement.classList.remove('hidden'); // Ensure video element is visible
+            if (stream) { // Prevent re-initializing if stream already exists
+                return;
+            }
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: true
+                });
+                videoElement.srcObject = stream;
+                await videoElement.play(); // Explicitly play the video element to ensure it starts
+                videoStatusText.textContent = "Camera ready - Click record to start";
+                recordBtn.disabled = false; // Enable record button once camera is ready
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+                // If camera access is denied or unavailable, inform the user
+                // and ENABLE the record button so they can click it to retry.
+                videoStatusText.textContent = "Camera access denied or unavailable. Click record to try again.";
+                recordBtn.disabled = false; // <--- CHANGED THIS LINE: Ensure button is enabled for retry
+            }
+        }
+
+        // Image upload functions
+        function sanitizeFileName(name) {
+            return name.replace(/[^a-z0-9.\-_]/gi, '_').toLowerCase();
+        }
+
+        function showImagePreview(file) {
+            selectedFile = file;
+            const url = URL.createObjectURL(file);
+            previewImage.src = url;
+            uploadArea.classList.add('hidden');
+            imagePreview.classList.remove('hidden');
+        }
+
+        function hideImagePreview() {
+            selectedFile = null;
+            uploadArea.classList.remove('hidden');
+            imagePreview.classList.add('hidden');
+            photoInput.value = '';
+            if (previewImage.src) {
+                URL.revokeObjectURL(previewImage.src);
+            }
+        }
+
+        // Video recording functions
+        async function startRecording() { // Made async to await initCamera
+            videoElement.classList.remove('hidden'); // Ensure video element is visible before recording
+            playbackVideo.classList.add('hidden'); // Ensure playback video is hidden
+            // Only attempt to initialize camera if 'stream' is not already available
+            if (!stream) { // <--- CORRECTED THIS CONDITION
+                videoStatusText.textContent = "Attempting to access camera...";
+                recordBtn.disabled = true; // Temporarily disable while trying to get camera
+                await initCamera(); // Try to initialize camera again
+                if (!stream) { // If camera still not available after re-attempt
+                    videoStatusText.textContent = "Camera access denied or unavailable. Please grant permissions.";
+                    recordBtn.disabled = false; // Re-enable button so user can try again
+                    return; // Exit if stream is still not available
+                }
+            }
+
+            // If we reach here, 'stream' should be available. Proceed with recording setup.
             recordedChunks = [];
             mediaRecorder = new MediaRecorder(stream);
             
@@ -448,6 +520,7 @@
             timer.classList.add('hidden');
             stopTimer();
             videoStatusText.textContent = "Recording stopped - Review your video";
+            recordBtn.disabled = false; // Re-enable record button after stopping
         }
 
         function startTimer() {
@@ -487,6 +560,7 @@
             
             retakeBtn.classList.add('hidden');
             recordBtn.classList.remove('hidden');
+            recordBtn.disabled = false; // Ensure record button is enabled for retake
             
             if (playbackVideo.src) {
                 URL.revokeObjectURL(playbackVideo.src);
