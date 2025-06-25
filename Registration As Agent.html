@@ -217,8 +217,8 @@
                                     Verification Status You Appying For
                                 </label>
                                 <select id="verified" name="verified" class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="false">Not Verified (Free)</option>
-                                    <option value="true">Verify Me (GH₵ 50)</option>
+                                    <option value="Not Verified (Free)">Not Verified (Free)</option>
+                                    <option value="Verify Me (GH₵ 50)">Verify Me (GH₵ 50)</option>
                                 </select>
                             </div>
                         </div>
@@ -662,7 +662,7 @@
                     email: formData.get('email'),
                     location: formData.get('location'),
                     category: formData.get('category'),
-                    verified: formData.get('verified') === 'true'
+                    verified: formData.get('verified') // Directly use the string value from the dropdown
                 };
 
                 // Insert agent first

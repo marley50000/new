@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post a Request - Agent Spark Ghana</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { opacity: 0; transform: translateY(20px); animation: fadeInUp 1s ease-out forwards; }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-[#f0f2f5] min-h-screen p-4 flex items-center justify-center">
+  <main class="max-w-2xl w-full bg-white p-8 rounded-lg shadow-lg fade-in">
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Post Your Request</h1>
+    <p class="text-center text-gray-600 mb-8">Tell us what you need, and agents will reach out to you!</p>
+
+    <form id="requestForm" class="space-y-6">
+      <div>
+        <label for="title" class="block text-sm font-medium text-gray-700 mb-1">Request Title</label>
+        <input type="text" id="title" name="title" required placeholder="e.g., Need a 2-bedroom apartment in Accra"
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category of Service Needed</label>
+        <select id="category" name="category" required
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="" disabled selected>Select a category</option>
+            <option value="Rentals">Rentals/House Agents</option>
+            <option value="Insurance">Insurance</option>
+            <option value="Legal Help">Legal Help</option>
+            <option value="Visa">Visa</option>
+            <option value="Real Estate">Real Estate</option>
+            <option value="Financial Services">Financial Services</option>
+            <option value="Education">Education</option>
+            <option value="Healthcare">Healthcare</option>
+            <option value="Travel">Travel</option>
+            <option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Detailed Description</label>
+        <textarea id="description" name="description" rows="5" required placeholder="Provide details about your request, e.g., preferred location, budget range, specific requirements."
+                  class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+      </div>
+
+      <div>
+        <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Preferred Location (Optional)</label>
+        <input type="text" id="location" name="location" placeholder="e.g., East Legon, Accra"
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label for="budget" class="block text-sm font-medium text-gray-700 mb-1">Budget (GH₵ - Optional)</label>
+        <input type="number" id="budget" name="budget" placeholder="e.g., 1500"
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label for="contactName" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+        <input type="text" id="contactName" name="contactName" required placeholder="Your full name"
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label for="contactEmail" class="block text-sm font-medium text-gray-700 mb-1">Your Email</label>
+        <input type="email" id="contactEmail" name="contactEmail" required placeholder="your@example.com"
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <div>
+        <label for="contactPhone" class="block text-sm font-medium text-gray-700 mb-1">Your Phone Number</label>
+        <input type="tel" id="contactPhone" name="contactPhone" required placeholder="+233 24 123 4567"
+               class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+
+      <button type="submit" id="submitBtn"
+              class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Post Request
+      </button>
+    </form>
+
+    <div id="successMessage" class="hidden mt-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
+      Your request has been posted successfully! Redirecting...
+    </div>
+    <div id="errorMessage" class="hidden mt-6 p-4 bg-red-100 text-red-800 rounded-md text-center">
+      An error occurred. Please try again.
+    </div>
+  </main>
+
+  <script src="https://unpkg.com/@supabase/supabase-js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const supabaseUrl = 'https://qzddjvloicjwshggzctt.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRqdmxvaWNqd3NoZ2d6Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDk5MzMsImV4cCI6MjA2NDk4NTkzM30.mkrERrCanIkNnIlch5UJ-OOJ9az7oXs1EFZijkf7y7o'; // Add your real key here
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+      const requestForm = document.getElementById('requestForm');
+      const submitBtn = document.getElementById('submitBtn');
+      const successMessage = document.getElementById('successMessage');
+      const errorMessage = document.getElementById('errorMessage');
+
+      requestForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        submitBtn.innerHTML = `
+          <div class="flex items-center gap-2">
+            <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full loading-spinner"></div>
+            Posting...
+          </div>
+        `;
+        submitBtn.disabled = true;
+        successMessage.classList.add('hidden');
+        errorMessage.classList.add('hidden');
+
+        const formData = new FormData(requestForm);
+        const requestData = {
+          title: formData.get('title'),
+          category: formData.get('category'),
+          description: formData.get('description'),
+          location: formData.get('location'),
+          budget: formData.get('budget') ? parseFloat(formData.get('budget')) : null, // Convert to number or null
+          contact_name: formData.get('contactName'),
+          contact_email: formData.get('contactEmail'),
+          contact_phone: formData.get('contactPhone'),
+          status: 'open' // Default status for new requests
+        };
+
+        try {
+          const { data, error } = await supabase
+            .from('user_requests') // This is the new table name
+            .insert([requestData]);
+
+          if (error) {
+            throw new Error(error.message);
+          }
+
+          successMessage.classList.remove('hidden');
+          requestForm.reset(); // Clear the form
+
+          setTimeout(() => {
+            window.location.href = 'Homepage.html'; // Redirect back to homepage
+          }, 3000);
+
+        } catch (error) {
+          console.error("Error posting request:", error);
+          errorMessage.textContent = "An error occurred: " + error.message;
+          errorMessage.classList.remove('hidden');
+        } finally {
+          submitBtn.innerHTML = 'Post Request';
+          submitBtn.disabled = false;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
