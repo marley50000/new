@@ -34,6 +34,11 @@
         </svg>
         Post a Request
       </a>
+      <!-- New button for My Requests -->
+      <a id="myRequestsToggle" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-4">
+        <i class="fas fa-history mr-3 h-5 w-5"></i>
+        My Posted Requests
+      </a>
     </form>
 
     <!-- Post Request Form Container (initially hidden) -->
@@ -109,7 +114,7 @@
       </form>
 
       <div id="successMessage" class="hidden mt-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
-        Your request has been posted successfully! Redirecting...
+        Your request has been posted successfully! Agents will contact you ASAP...
       </div>
       <div id="errorMessage" class="hidden mt-6 p-4 bg-red-100 text-red-800 rounded-md text-center">
         An error occurred. Please try again.
@@ -148,12 +153,15 @@
     </section>
 
     <!-- New Section for My Requests (initially hidden) -->
-    <section id="myRequestsSection" class="hidden bg-white rounded-3xl p-6 mb-10 shadow-md">
-      <h2 class="text-xl font-semibold mb-6">My Posted Requests</h2>
-      <div id="my-requests-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-      <p id="my-requests-loading" class="text-center text-gray-500 mt-4">Loading your requests...</p>
-      <p id="my-requests-empty" class="hidden text-center text-gray-500 mt-4">You haven't posted any requests yet.</p>
-    </section>
+    <div id="myRequestsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 shadow-xl relative">
+        <button id="closeMyRequestsModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+        <h2 class="text-2xl font-semibold mb-6 text-gray-800">My Posted Requests</h2>
+        <div id="my-requests-container" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-96 overflow-y-auto pr-2"></div>
+        <p id="my-requests-loading" class="text-center text-gray-500 mt-4">Loading your requests...</p>
+        <p id="my-requests-empty" class="hidden text-center text-gray-500 mt-4">You haven't posted any requests yet.</p>
+      </div>
+    </div>
 
     <!-- Why Choose Section -->
     <section class="flex flex-wrap justify-around items-center bg-white p-6 rounded-3xl shadow-md">
@@ -206,7 +214,7 @@
       const postRequestFormContainer = document.getElementById('postRequestFormContainer');
 
       // New: Reference to the "My Requests" section and its containers
-      const myRequestsSection = document.getElementById('myRequestsSection');
+      const myRequestsModal = document.getElementById('myRequestsModal'); // Changed from myRequestsSection
       const myRequestsContainer = document.getElementById('my-requests-container');
       const myRequestsLoading = document.getElementById('my-requests-loading');
       const myRequestsEmpty = document.getElementById('my-requests-empty');
@@ -222,18 +230,92 @@
       const modalStatus = document.getElementById('modalStatus');
       const modalPostedDate = document.getElementById('modalPostedDate');
       const modalContactName = document.getElementById('modalContactName');
-      const modalContactEmail = document.getElementById('modalContactEmail');
+      const modalContactEmail = document = document.getElementById('modalContactEmail');
       const modalContactPhone = document.getElementById('modalContactPhone');
+
+      // New: Reference to the new toggle button for My Requests
+      const myRequestsToggle = document.getElementById('myRequestsToggle');
 
       let currentUser = null; // New: Variable to store the logged-in user
       let allUserRequests = new Map(); // New: To store requests for easy lookup by ID
+
+      // Add a flag to prevent multiple rapid clicks
+      let isMyRequestsToggleProcessing = false;
 
       // Add event listener for the Post a Request button
       if (postRequestToggle && postRequestFormContainer) {
         postRequestToggle.addEventListener('click', (event) => {
           event.preventDefault(); // Prevent the default link behavior (navigating to a new page)
           postRequestFormContainer.classList.toggle('hidden'); // Toggle the 'hidden' class to show/hide the form
+          // Hide my requests modal if it's open
+          if (!myRequestsModal.classList.contains('hidden')) { // Changed from myRequestsSection
+              myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
+          }
+          console.log('Post Request button clicked. Form visibility:', !postRequestFormContainer.classList.contains('hidden'));
         });
+      }
+
+      // New: Add event listener for the My Requests toggle button
+      if (myRequestsToggle && myRequestsModal) { // Changed from myRequestsSection
+          myRequestsToggle.addEventListener('click', async (event) => {
+              event.preventDefault();
+
+              if (isMyRequestsToggleProcessing) {
+                  console.log('My Requests toggle already processing. Ignoring click.');
+                  return; // Ignore subsequent clicks while processing
+              }
+
+              isMyRequestsToggleProcessing = true; // Set flag to true
+              console.log('My Requests button clicked.');
+
+              // Determine if the modal is currently hidden
+              const isCurrentlyHidden = myRequestsModal.classList.contains('hidden'); // Changed from myRequestsSection
+              console.log('Initial state of My Requests modal (hidden class present):', isCurrentlyHidden);
+
+              // Hide post request form if it's open
+              if (!postRequestFormContainer.classList.contains('hidden')) {
+                  postRequestFormContainer.classList.add('hidden');
+                  console.log('Post Request form hidden.');
+              }
+
+              if (isCurrentlyHidden) {
+                  // If currently hidden, show it
+                  myRequestsModal.classList.remove('hidden'); // Changed from myRequestsSection
+                  console.log('My Requests modal is now visible. Current classes:', myRequestsModal.classList.value); // Changed from myRequestsSection
+
+                  if (currentUser) {
+                      console.log('User is logged in. Loading requests...');
+                      // Add visual feedback for loading
+                      const originalButtonContent = myRequestsToggle.innerHTML;
+                      myRequestsToggle.innerHTML = `
+                          <div class="flex items-center justify-center gap-2">
+                              <div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                              Loading...
+                          </div>
+                      `;
+                      // Temporarily disable pointer events to prevent clicks
+                      myRequestsToggle.style.pointerEvents = 'none';
+
+                      try {
+                          await loadMyRequests(currentUser.id);
+                      } finally {
+                          // Restore button state
+                          myRequestsToggle.innerHTML = originalButtonContent;
+                          myRequestsToggle.style.pointerEvents = 'auto';
+                      }
+                  } else {
+                      alert("Please log in to view your posted requests.");
+                      myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
+                      console.log('User not logged in. My Requests modal hidden. Current classes:', myRequestsModal.classList.value); // Changed from myRequestsSection
+                  }
+              } else {
+                  // If currently visible, hide it
+                  myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
+                  console.log('My Requests modal is now hidden. Current classes:', myRequestsModal.classList.value); // Changed from myRequestsSection
+              }
+
+              isMyRequestsToggleProcessing = false; // Reset flag after processing
+          });
       }
 
       // --- Start of new code for form submission ---
@@ -249,12 +331,13 @@
           if (!currentUser) { // New: Check if user is logged in before submitting
             errorMessage.textContent = "Please log in to post a request.";
             errorMessage.classList.remove('hidden');
+            console.log('Form submission blocked: User not logged in.');
             return;
           }
 
           submitBtn.innerHTML = `
             <div class="flex items-center gap-2">
-              <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full loading-spinner"></div>
+              <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               Posting...
             </div>
           `;
@@ -295,6 +378,7 @@
 
             // New: Reload user requests after a successful submission
             loadMyRequests(currentUser.id);
+            console.log('Request posted successfully. Reloading my requests.');
 
             // You can remove the redirect if you prefer to stay on the homepage
             // setTimeout(() => {
@@ -320,8 +404,9 @@
           console.error("Error getting user:", error.message);
           // Optionally display a login/signup link if there's an error or no user
           userAuthSection.innerHTML = `<a href="#" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
-          myRequestsSection.classList.add('hidden'); // Hide "My Requests" if not logged in
+          myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
           currentUser = null; // Ensure currentUser is null
+          console.log('No user found or error getting user. currentUser set to null.');
           return;
         }
     
@@ -340,13 +425,15 @@
               window.location.reload(); // Reload page to reflect logged out state
             }
           });
-          myRequestsSection.classList.remove('hidden'); // New: Show "My Requests" section
-          loadMyRequests(currentUser.id); // New: Load requests for the logged-in user
+          console.log('User logged in:', userName, 'ID:', currentUser.id);
+          // myRequestsModal.classList.remove('hidden'); // REMOVED: Visibility now controlled by toggle button
+          // loadMyRequests(currentUser.id); // REMOVED: Loading now controlled by toggle button
         } else {
           // If no user is logged in, display a login/signup link
           userAuthSection.innerHTML = `<a href="#" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
-          myRequestsSection.classList.add('hidden'); // Hide "My Requests" if not logged in
+          myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
           currentUser = null; // Ensure currentUser is null
+          console.log('No user logged in. currentUser set to null.');
         }
       }
     
@@ -367,11 +454,13 @@
           modalContactEmail.textContent = request.contact_email;
           modalContactPhone.textContent = request.contact_phone;
           requestDetailsModal.classList.remove('hidden');
+          console.log('Displaying request details modal for request ID:', request.id);
       }
 
       // New: Function to close the request details modal
       function closeRequestDetailsModal() {
           requestDetailsModal.classList.add('hidden');
+          console.log('Request details modal closed.');
       }
 
       // New: Event listeners for closing the modal
@@ -382,8 +471,23 @@
           }
       });
 
+      // New: Function to close the My Requests modal
+      const closeMyRequestsModalBtn = document.getElementById('closeMyRequestsModal');
+      closeMyRequestsModalBtn.addEventListener('click', () => {
+          myRequestsModal.classList.add('hidden');
+          console.log('My Requests modal closed.');
+      });
+
+      myRequestsModal.addEventListener('click', (event) => {
+          if (event.target === myRequestsModal) { // Close if clicking on the overlay
+              myRequestsModal.classList.add('hidden');
+              console.log('My Requests modal closed by overlay click.');
+          }
+      });
+
       // New: Function to load and display user's requests
       async function loadMyRequests(userId) {
+        console.log('Attempting to load requests for user ID:', userId);
         myRequestsContainer.innerHTML = ''; // Clear previous requests
         myRequestsLoading.classList.remove('hidden'); // Show loading message
         myRequestsEmpty.classList.add('hidden'); // Hide empty message
@@ -403,8 +507,11 @@
           return;
         }
 
+        console.log('Supabase response for user requests:', data);
+
         if (data.length === 0) {
           myRequestsEmpty.classList.remove('hidden'); // Show empty message
+          console.log('No requests found for this user.');
           return;
         }
 
@@ -427,14 +534,18 @@
             </article>
           `;
         });
+        console.log('Requests rendered to container.');
 
         // Attach event listeners to the newly created "View Details" buttons
         document.querySelectorAll('.view-details-btn').forEach(button => {
             button.addEventListener('click', (event) => {
                 const requestId = event.target.dataset.requestId;
+                console.log('View Details button clicked for request ID:', requestId); // Added for debugging
                 const request = allUserRequests.get(requestId);
                 if (request) {
                     displayRequestDetailsModal(request);
+                } else {
+                    console.error('Request not found in map for ID:', requestId); // Added for debugging
                 }
             });
         });
