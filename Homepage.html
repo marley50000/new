@@ -246,10 +246,21 @@
       if (postRequestToggle && postRequestFormContainer) {
         postRequestToggle.addEventListener('click', (event) => {
           event.preventDefault(); // Prevent the default link behavior (navigating to a new page)
+
+          // Check if the form is currently hidden (meaning it's about to be shown)
+          const isFormCurrentlyHidden = postRequestFormContainer.classList.contains('hidden');
+
           postRequestFormContainer.classList.toggle('hidden'); // Toggle the 'hidden' class to show/hide the form
+
+          // If the form is now visible (it was hidden before this click), clear any previous messages
+          if (isFormCurrentlyHidden) {
+              successMessage.classList.add('hidden');
+              errorMessage.classList.add('hidden');
+          }
+
           // Hide my requests modal if it's open
-          if (!myRequestsModal.classList.contains('hidden')) { // Changed from myRequestsSection
-              myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
+          if (!myRequestsModal.classList.contains('hidden')) {
+              myRequestsModal.classList.add('hidden');
           }
           console.log('Post Request button clicked. Form visibility:', !postRequestFormContainer.classList.contains('hidden'));
         });
@@ -373,8 +384,9 @@
             successMessage.classList.remove('hidden');
             requestForm.reset(); // Clear the form
 
-            // Optionally hide the form after successful submission
+            // Hide the post request form and show the my requests modal
             postRequestFormContainer.classList.add('hidden');
+            myRequestsModal.classList.remove('hidden');
 
             // New: Reload user requests after a successful submission
             loadMyRequests(currentUser.id);
