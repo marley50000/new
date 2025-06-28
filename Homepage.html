@@ -153,7 +153,7 @@
     </section>
 
     <!-- New Section for My Requests (initially hidden) -->
-    <div id="myRequestsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="myRequestsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-start justify-center z-50 hidden pt-10">
       <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 shadow-xl relative">
         <button id="closeMyRequestsModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
         <h2 class="text-2xl font-semibold mb-6 text-gray-800">My Posted Requests</h2>
@@ -449,7 +449,7 @@
           modalBudget.textContent = request.budget ? `GH₵ ${request.budget.toLocaleString()}` : 'N/A';
           modalStatus.textContent = request.status;
           modalStatus.className = `font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}`; // Apply status color
-          modalPostedDate.textContent = new Date(request.created_at).toLocaleDateString();
+          modalPostedDate.textContent = new Date(request.created_at).toLocaleString(); // Changed to toLocaleString()
           modalContactName.textContent = request.contact_name;
           modalContactEmail.textContent = request.contact_email;
           modalContactPhone.textContent = request.contact_phone;
@@ -528,7 +528,7 @@
               </div>
               <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
                 <span>Status: <span class="font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}">${request.status}</span></span>
-                <span>Posted: ${new Date(request.created_at).toLocaleDateString()}</span>
+                <span>Posted: ${new Date(request.created_at).toLocaleString()}</span> // Changed to toLocaleString()
               </div>
               <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-4 text-sm view-details-btn" data-request-id="${request.id}">View Details</button>
             </article>
