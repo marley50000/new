@@ -14,6 +14,11 @@
 </head>
 <body class="bg-[#ffff] min-h-screen p-4">
   <main class="max-w-7xl mx-auto fade-in">
+    <!-- New: Placeholder for user authentication status -->
+    <div id="user-auth-section" class="text-right mb-4">
+      <!-- Content will be dynamically loaded by JavaScript -->
+    </div>
+
     <h1 class="text-3xl font-bold text-center mb-6">Find verified agents in Ghana</h1>
 
     <!-- Button to Register as Agent -->
@@ -152,6 +157,14 @@
       <p id="random-loading" class="text-center text-gray-500 mt-4">Loading other agents...</p>
     </section>
 
+    <!-- New Section for All Open Requests -->
+    <section class="bg-white rounded-3xl p-6 mb-10 shadow-md">
+      <h2 class="text-xl font-semibold mb-6">Open Requests from Other Users</h2>
+      <div id="all-requests-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      <p id="all-requests-loading" class="text-center text-gray-500 mt-4">Loading open requests...</p>
+      <p id="all-requests-empty" class="hidden text-center text-gray-500 mt-4">No open requests available at the moment.</p>
+    </section>
+
     <!-- New Section for My Requests (initially hidden) -->
     <div id="myRequestsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-start justify-center z-50 hidden pt-10">
       <div class="bg-white rounded-lg p-6 max-w-3xl w-full mx-4 shadow-xl relative">
@@ -238,6 +251,7 @@
 
       let currentUser = null; // New: Variable to store the logged-in user
       let allUserRequests = new Map(); // New: To store requests for easy lookup by ID
+      let allOpenRequestsMap = new Map(); // New: To store all open requests for easy lookup by ID
 
       // Add a flag to prevent multiple rapid clicks
       let isMyRequestsToggleProcessing = false;
@@ -450,7 +464,10 @@
       }
     
       // Call this function when the page loads to check user status
-      checkUserAndDisplayAuth();
+      checkUserAndDisplayAuth().then(() => {
+          // After user status is checked, load all open requests
+          loadAllOpenRequests();
+      });
 
       // New: Function to display request details in the modal
       function displayRequestDetailsModal(request) {
@@ -678,6 +695,85 @@
                   </div>
                 </article>`;
         }
+      }
+
+      // New: Function to load and display all open requests
+      async function loadAllOpenRequests() {
+        console.log('Attempting to load all open requests...');
+        const allRequestsContainer = document.getElementById('all-requests-container');
+        const allRequestsLoading = document.getElementById('all-requests-loading');
+        const allRequestsEmpty = document.getElementById('all-requests-empty');
+
+        allRequestsContainer.innerHTML = ''; // Clear previous requests
+        allRequestsLoading.classList.remove('hidden'); // Show loading message
+        allRequestsEmpty.classList.add('hidden'); // Hide empty message
+        allOpenRequestsMap.clear(); // Clear previous requests from map
+
+        const { data, error } = await supabase
+          .from('user_requests')
+          .select('*')
+          .eq('status', 'open') // Only fetch open requests
+          .order('created_at', { ascending: false }); // Show newest first
+
+        allRequestsLoading.classList.add('hidden'); // Hide loading message
+
+        if (error) {
+          console.error("Error loading all open requests:", error.message);
+          allRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load open requests.</p>`;
+          return;
+        }
+
+        console.log('Supabase response for all open requests:', data);
+
+        let requestsRenderedCount = 0; // Initialize a counter for rendered requests
+
+        if (data.length > 0) { // Only iterate if there's data
+          data.forEach(request => {
+            // The filter for currentUser was removed in the last turn.
+            // So, every 'open' request should now be processed.
+            console.log('Processing request:', request.id, request.title); // New: Log each request being processed
+
+            allOpenRequestsMap.set(request.id, request); // Store request in map
+
+            allRequestsContainer.innerHTML += `
+              <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
+                <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
+                <p class="text-sm text-gray-600 mb-2">${request.category}</p>
+                <p class="text-sm text-gray-700 mb-3">${request.description.substring(0, 100)}${request.description.length > 100 ? '...' : ''}</p>
+                <div class="flex justify-between items-center text-xs text-gray-500">
+                  <span>Location: ${request.location || 'N/A'}</span>
+                  <span>Budget: GH₵ ${request.budget ? request.budget.toLocaleString() : 'N/A'}</span>
+                </div>
+                <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
+                  <span>Posted: ${new Date(request.created_at).toLocaleString()}</span>
+                </div>
+                <button class="mt-4 bg-green-600 hover:bg-green-700 text-white rounded-md py-2 px-4 text-sm respond-to-request-btn" data-request-id="${request.id}">Respond to Request</button>
+              </article>
+            `;
+            requestsRenderedCount++; // Increment counter for each request actually added to the DOM
+          });
+        }
+
+        // After iterating through all data, check if any requests were actually rendered
+        if (requestsRenderedCount === 0) {
+          allRequestsEmpty.classList.remove('hidden'); // Show the "empty" message
+          console.log('No open requests found.'); // Updated log message
+        } else {
+          console.log(`${requestsRenderedCount} open requests rendered.`); // Updated log message
+        }
+
+        // Attach event listeners to the "Respond to Request" buttons
+        document.querySelectorAll('.respond-to-request-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const requestId = event.target.dataset.requestId;
+                const request = allOpenRequestsMap.get(requestId);
+                if (request) {
+                    displayRequestDetailsModal(request); // Reuse existing modal to show details
+                } else {
+                    console.error('Request not found in map for ID:', requestId);
+                }
+            });
+        });
       }
     
       loadFeaturedAgents(); // Call the renamed function
