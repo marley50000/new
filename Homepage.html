@@ -147,6 +147,14 @@
       <p id="random-loading" class="text-center text-gray-500 mt-4">Loading other agents...</p>
     </section>
 
+    <!-- New Section for My Requests (initially hidden) -->
+    <section id="myRequestsSection" class="hidden bg-white rounded-3xl p-6 mb-10 shadow-md">
+      <h2 class="text-xl font-semibold mb-6">My Posted Requests</h2>
+      <div id="my-requests-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+      <p id="my-requests-loading" class="text-center text-gray-500 mt-4">Loading your requests...</p>
+      <p id="my-requests-empty" class="hidden text-center text-gray-500 mt-4">You haven't posted any requests yet.</p>
+    </section>
+
     <!-- Why Choose Section -->
     <section class="flex flex-wrap justify-around items-center bg-white p-6 rounded-3xl shadow-md">
       <h3 class="text-xl font-semibold w-full text-center mb-4">Why Choose Verified Agents?</h3>
@@ -164,6 +172,26 @@
     </section>
   </main>
 
+  <!-- Request Details Modal -->
+  <div id="requestDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl relative">
+      <button id="closeRequestDetailsModal" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl font-bold">&times;</button>
+      <h2 id="modalTitle" class="text-2xl font-bold mb-4 text-gray-800"></h2>
+      <p class="text-gray-700 mb-2"><strong class="text-gray-900">Category:</strong> <span id="modalCategory"></span></p>
+      <p class="text-gray-700 mb-2"><strong class="text-gray-900">Description:</strong> <span id="modalDescription"></span></p>
+      <p class="text-gray-700 mb-2"><strong class="text-gray-900">Location:</strong> <span id="modalLocation"></span></p>
+      <p class="text-gray-700 mb-2"><strong class="text-gray-900">Budget:</strong> <span id="modalBudget"></span></p>
+      <p class="text-gray-700 mb-2"><strong class="text-gray-900">Status:</strong> <span id="modalStatus"></span></p>
+      <p class="text-gray-700 mb-2"><strong class="text-gray-900">Posted On:</strong> <span id="modalPostedDate"></span></p>
+      <div class="mt-4 pt-4 border-t border-gray-200">
+        <h3 class="text-lg font-semibold mb-2 text-gray-800">Contact Information:</h3>
+        <p class="text-gray-700 mb-1"><strong class="text-gray-900">Name:</strong> <span id="modalContactName"></span></p>
+        <p class="text-gray-700 mb-1"><strong class="text-gray-900">Email:</strong> <span id="modalContactEmail"></span></p>
+        <p class="text-gray-700"><strong class="text-gray-900">Phone:</strong> <span id="modalContactPhone"></span></p>
+      </div>
+    </div>
+  </div>
+
   <script src="https://unpkg.com/@supabase/supabase-js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -176,6 +204,29 @@
       // Get references to the new elements
       const postRequestToggle = document.getElementById('postRequestToggle');
       const postRequestFormContainer = document.getElementById('postRequestFormContainer');
+
+      // New: Reference to the "My Requests" section and its containers
+      const myRequestsSection = document.getElementById('myRequestsSection');
+      const myRequestsContainer = document.getElementById('my-requests-container');
+      const myRequestsLoading = document.getElementById('my-requests-loading');
+      const myRequestsEmpty = document.getElementById('my-requests-empty');
+
+      // New: References to modal elements
+      const requestDetailsModal = document.getElementById('requestDetailsModal');
+      const closeRequestDetailsModalBtn = document.getElementById('closeRequestDetailsModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalCategory = document.getElementById('modalCategory');
+      const modalDescription = document.getElementById('modalDescription');
+      const modalLocation = document.getElementById('modalLocation');
+      const modalBudget = document.getElementById('modalBudget');
+      const modalStatus = document.getElementById('modalStatus');
+      const modalPostedDate = document.getElementById('modalPostedDate');
+      const modalContactName = document.getElementById('modalContactName');
+      const modalContactEmail = document.getElementById('modalContactEmail');
+      const modalContactPhone = document.getElementById('modalContactPhone');
+
+      let currentUser = null; // New: Variable to store the logged-in user
+      let allUserRequests = new Map(); // New: To store requests for easy lookup by ID
 
       // Add event listener for the Post a Request button
       if (postRequestToggle && postRequestFormContainer) {
@@ -194,6 +245,12 @@
       if (requestForm) { // Ensure the form exists before adding listener
         requestForm.addEventListener('submit', async function(event) {
           event.preventDefault();
+
+          if (!currentUser) { // New: Check if user is logged in before submitting
+            errorMessage.textContent = "Please log in to post a request.";
+            errorMessage.classList.remove('hidden');
+            return;
+          }
 
           submitBtn.innerHTML = `
             <div class="flex items-center gap-2">
@@ -215,8 +272,11 @@
             contact_name: formData.get('contactName'),
             contact_email: formData.get('contactEmail'),
             contact_phone: formData.get('contactPhone'),
-            status: 'open' // Default status for new requests
+            status: 'open', // Default status for new requests
+            user_id: currentUser.id // This line ensures the user's ID is included
           };
+
+          console.log("Submitting request data:", requestData); // New: Log the data being sent
 
           try {
             const { data, error } = await supabase
@@ -232,6 +292,9 @@
 
             // Optionally hide the form after successful submission
             postRequestFormContainer.classList.add('hidden');
+
+            // New: Reload user requests after a successful submission
+            loadMyRequests(currentUser.id);
 
             // You can remove the redirect if you prefer to stay on the homepage
             // setTimeout(() => {
@@ -257,10 +320,13 @@
           console.error("Error getting user:", error.message);
           // Optionally display a login/signup link if there's an error or no user
           userAuthSection.innerHTML = `<a href="#" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
+          myRequestsSection.classList.add('hidden'); // Hide "My Requests" if not logged in
+          currentUser = null; // Ensure currentUser is null
           return;
         }
     
         if (user) {
+          currentUser = user; // New: Store the user object
           const userName = user.user_metadata?.full_name || user.email;
           userAuthSection.innerHTML = `
             <span class="text-gray-700 text-sm mr-2">Welcome, ${userName}!</span>
@@ -274,14 +340,105 @@
               window.location.reload(); // Reload page to reflect logged out state
             }
           });
+          myRequestsSection.classList.remove('hidden'); // New: Show "My Requests" section
+          loadMyRequests(currentUser.id); // New: Load requests for the logged-in user
         } else {
           // If no user is logged in, display a login/signup link
           userAuthSection.innerHTML = `<a href="#" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
+          myRequestsSection.classList.add('hidden'); // Hide "My Requests" if not logged in
+          currentUser = null; // Ensure currentUser is null
         }
       }
     
       // Call this function when the page loads to check user status
       checkUserAndDisplayAuth();
+
+      // New: Function to display request details in the modal
+      function displayRequestDetailsModal(request) {
+          modalTitle.textContent = request.title;
+          modalCategory.textContent = request.category;
+          modalDescription.textContent = request.description;
+          modalLocation.textContent = request.location || 'N/A';
+          modalBudget.textContent = request.budget ? `GH₵ ${request.budget.toLocaleString()}` : 'N/A';
+          modalStatus.textContent = request.status;
+          modalStatus.className = `font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}`; // Apply status color
+          modalPostedDate.textContent = new Date(request.created_at).toLocaleDateString();
+          modalContactName.textContent = request.contact_name;
+          modalContactEmail.textContent = request.contact_email;
+          modalContactPhone.textContent = request.contact_phone;
+          requestDetailsModal.classList.remove('hidden');
+      }
+
+      // New: Function to close the request details modal
+      function closeRequestDetailsModal() {
+          requestDetailsModal.classList.add('hidden');
+      }
+
+      // New: Event listeners for closing the modal
+      closeRequestDetailsModalBtn.addEventListener('click', closeRequestDetailsModal);
+      requestDetailsModal.addEventListener('click', (event) => {
+          if (event.target === requestDetailsModal) { // Close if clicking on the overlay
+              closeRequestDetailsModal();
+          }
+      });
+
+      // New: Function to load and display user's requests
+      async function loadMyRequests(userId) {
+        myRequestsContainer.innerHTML = ''; // Clear previous requests
+        myRequestsLoading.classList.remove('hidden'); // Show loading message
+        myRequestsEmpty.classList.add('hidden'); // Hide empty message
+        allUserRequests.clear(); // Clear previous requests from map
+
+        const { data, error } = await supabase
+          .from('user_requests')
+          .select('*')
+          .eq('user_id', userId) // Filter by the current user's ID
+          .order('created_at', { ascending: false }); // Show newest first
+
+        myRequestsLoading.classList.add('hidden'); // Hide loading message
+
+        if (error) {
+          console.error("Error loading user requests:", error.message);
+          myRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load your requests.</p>`;
+          return;
+        }
+
+        if (data.length === 0) {
+          myRequestsEmpty.classList.remove('hidden'); // Show empty message
+          return;
+        }
+
+        data.forEach(request => {
+          allUserRequests.set(request.id, request); // Store request in map for easy lookup
+          myRequestsContainer.innerHTML += `
+            <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
+              <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
+              <p class="text-sm text-gray-600 mb-2">${request.category}</p>
+              <p class="text-sm text-gray-700 mb-3">${request.description.substring(0, 100)}${request.description.length > 100 ? '...' : ''}</p>
+              <div class="flex justify-between items-center text-xs text-gray-500">
+                <span>Location: ${request.location || 'N/A'}</span>
+                <span>Budget: GH₵ ${request.budget ? request.budget.toLocaleString() : 'N/A'}</span>
+              </div>
+              <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
+                <span>Status: <span class="font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}">${request.status}</span></span>
+                <span>Posted: ${new Date(request.created_at).toLocaleDateString()}</span>
+              </div>
+              <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-4 text-sm view-details-btn" data-request-id="${request.id}">View Details</button>
+            </article>
+          `;
+        });
+
+        // Attach event listeners to the newly created "View Details" buttons
+        document.querySelectorAll('.view-details-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const requestId = event.target.dataset.requestId;
+                const request = allUserRequests.get(requestId);
+                if (request) {
+                    displayRequestDetailsModal(request);
+                }
+            });
+        });
+      }
 
       // Utility function to shuffle an array (Fisher-Yates algorithm)
       function shuffleArray(array) {
