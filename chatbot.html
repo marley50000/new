@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f400; /* Just for standalone viewing */
+    }
+
+    #chat-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      font-size: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.3s ease;
+    }
+
+    #chat-icon:hover {
+      background-color: #0056b3;
+    }
+
+    #chat-box {
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 320px;
+      max-height: 450px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      visibility: hidden; /* Changed from display: none */
+      opacity: 0; /* Initial state for fade-in */
+      transform: translateY(20px); /* Initial state for slide-up */
+      transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* Smooth transition */
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      font-family: Arial, sans-serif;
+      z-index: 998;
+    }
+
+    /* New class for visible state */
+    #chat-box.chat-box-visible {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+      display: flex; /* Ensure it uses flexbox when visible */
+    }
+
+    #chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+      border-bottom: 1px solid #0056b3;
+    }
+
+    #close-chat {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 5px;
+      transition: color 0.3s ease;
+    }
+
+    #close-chat:hover {
+      color: #e0e0e0;
+    }
+
+    #chat-messages {
+      flex-grow: 1;
+      padding: 10px;
+      overflow-y: auto;
+      height: 350px; /* Fixed height for scrollable area */
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 15px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 14px;
+    }
+
+    .user {
+      background-color: #d1eaff; /* Light blue */
+      align-self: flex-end;
+      text-align: right;
+      border-bottom-right-radius: 2px; /* Pointy corner */
+    }
+
+    .bot {
+      background-color: #f0f0f0; /* Light grey */
+      align-self: flex-start;
+      border-bottom-left-radius: 2px; /* Pointy corner */
+    }
+
+    #chat-input {
+      display: flex;
+      border-top: 1px solid #e0e0e0;
+      padding: 10px;
+      background-color: #f9f9f9;
+    }
+
+    #user-input {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      outline: none;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    #send-btn {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    #send-btn:hover {
+      background-color: #0056b3;
+    }
+
+    /* New: CSS for loading animation */
+    .loading-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-left-color: #007bff;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Chat Icon -->
+<button id="chat-icon">💬</button>
+
+<!-- Chat Box -->
+<div id="chat-box">
+  <div id="chat-header">
+    <span>Agent Spark AI Chat</span>
+    <button id="close-chat">&times;</button>
+  </div>
+  <div id="chat-messages"></div>
+  <div id="chat-input">
+    <input type="text" id="user-input" placeholder="Type your message..." />
+    <button id="send-btn">➤</button>
+  </div>
+</div>
+
+<script>
+  const API_KEY = "AIzaSyDGjB6R8tYVCr10WieMNH-CuzG3eIMoapA"; // Replace with your Gemini API key
+  const MODEL_ID = "gemini-1.5-flash-002";
+  const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${API_KEY}`;
+
+  const chatIcon = document.getElementById("chat-icon");
+  const chatBox = document.getElementById("chat-box");
+  const closeChatBtn = document.getElementById("close-chat"); // New: Close button
+  const sendBtn = document.getElementById("send-btn");
+  const userInput = document.getElementById("user-input");
+  const chatMessages = document.getElementById("chat-messages");
+
+  // Function to handle closing animation
+  function closeChatWithAnimation() {
+    chatBox.classList.remove("chat-box-visible");
+    const handleTransitionEnd = () => {
+      chatBox.style.visibility = "hidden";
+      // Remove the event listener to prevent it from firing on other transitions
+      chatBox.removeEventListener("transitionend", handleTransitionEnd);
+    };
+    // Add event listener for when the transition finishes
+    chatBox.addEventListener("transitionend", handleTransitionEnd);
+  }
+
+  // Toggle chatbox visibility and show welcome message
+  chatIcon.onclick = () => {
+    if (!chatBox.classList.contains("chat-box-visible")) { // Chatbox is currently hidden
+      chatBox.style.visibility = "visible"; // Make it visible before starting transition
+      chatBox.classList.add("chat-box-visible"); // Add class to trigger fade-in/slide-up
+      if (chatMessages.children.length === 0) { // Show welcome message only if chat is empty
+        appendMessage("bot", "Hello! I'm Agent Spark's AI assistant. How can I help you today?");
+        scrollToBottom();
+      }
+      userInput.focus(); // Focus on input when chatbox opens
+    } else { // Chatbox is currently visible
+      closeChatWithAnimation();
+    }
+  };
+
+  // Close chatbox when close button is clicked
+  closeChatBtn.onclick = () => {
+    closeChatWithAnimation();
+  };
+
+  // Send message on button click
+  sendBtn.onclick = sendMessage;
+
+  // New: Send message on Enter key press
+  userInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      sendMessage();
+    }
+  });
+
+  async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    // Show user message
+    appendMessage("user", message);
+    userInput.value = "";
+    scrollToBottom();
+
+    // Show loading animation
+    const loading = appendLoadingMessage("bot"); // Call new function for loading
+    scrollToBottom();
+
+    // Call Gemini API
+    try {
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: message }] }]
+        })
+      });
+      const data = await res.json();
+
+      loading.remove(); // Remove the loading animation element
+
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+      appendMessage("bot", reply);
+      scrollToBottom();
+    } catch (err) {
+      loading.remove(); // Remove the loading animation element even on error
+      appendMessage("bot", "❌ Error contacting Gemini. Please check your API key or network connection.");
+      console.error("Gemini API error:", err);
+    }
+  }
+
+  function appendMessage(sender, text) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message ${sender}`;
+    msgDiv.textContent = text;
+    chatMessages.appendChild(msgDiv);
+    return msgDiv;
+  }
+
+  // New: Function to append a loading message with spinner
+  function appendLoadingMessage(sender) {
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `message ${sender}`;
+    
+    const spinner = document.createElement("span");
+    spinner.className = "loading-spinner";
+    msgDiv.appendChild(spinner);
+
+    const textSpan = document.createElement("span");
+    textSpan.textContent = "Typing...";
+    msgDiv.appendChild(textSpan);
+
+    chatMessages.appendChild(msgDiv);
+    return msgDiv; // Return the message div so it can be removed later
+  }
+
+  function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+</script>
+
+</body>
+</html>

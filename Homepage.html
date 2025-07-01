@@ -12,6 +12,7 @@
     @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
+
 <body class="bg-[#ffff] min-h-screen p-4">
   <main class="max-w-7xl mx-auto fade-in">
     <!-- New: Placeholder for user authentication status -->
@@ -31,7 +32,7 @@
       </a>
     </div>
 
-    <!-- Search Bar -->
+    <!-- Search Bar and Request Buttons -->
     <form class="max-w-md mx-auto relative mb-10">
       <a id="postRequestToggle" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
         <svg class="-ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -43,6 +44,11 @@
       <a id="myRequestsToggle" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-4">
         <i class="fas fa-history mr-3 h-5 w-5"></i>
         My Posted Requests
+      </a>
+      <!-- New button for Open Requests from Other Users -->
+      <a id="viewOpenRequestsButton" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mt-4">
+        <i class="fas fa-comments mr-3 h-5 w-5"></i>
+        Open Requests
       </a>
     </form>
 
@@ -126,39 +132,11 @@
       </div>
     </div>
 
-    <!-- Categories -->
-    <div class="flex flex-wrap justify-center gap-4 mb-8">
-      <button class="category-btn"><i class="fas fa-home text-blue-600 text-2xl"></i><br>Rentals</button>
-      <button class="category-btn"><i class="fas fa-shield-alt text-blue-600 text-2xl"></i><br>Insurance</button>
-      <button class="category-btn"><i class="fas fa-gavel text-blue-600 text-2xl"></i><br>Legal Help</button>
-      <button class="category-btn"><i class="fas fa-passport text-blue-600 text-2xl"></i><br>Visa</button>
-      <button class="category-btn"><span class="text-2xl font-bold">...</span><br>Others</button>
-    </div>
-
-    <!-- Featured Agents -->
-    <section class="bg-white rounded-3xl p-6 mb-10 shadow-md">
-      <h2 class="text-xl font-semibold mb-6 flex items-center">
-        Verified Agents
-        <span class="ml-2 inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </span>
-      </h2>
-      
-      <div id="featured-agents-container" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
-      <p id="featured-loading" class="text-center text-gray-500 mt-4">Verified agents...</p>
-    </section>
-
-    <!-- New Section for Random Agents -->
-    <section class="bg-white rounded-3xl p-6 mb-10 shadow-md">
-      <h2 class="text-xl font-semibold mb-6">Other Agents You Might Like</h2>
-      <div id="random-agents-container" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
-      <p id="random-loading" class="text-center text-gray-500 mt-4">Loading other agents...</p>
-    </section>
+    <!-- New: Container for the dynamically loaded chatbot -->
+    <div id="chatbot-container"></div>
 
     <!-- New Section for All Open Requests -->
-    <section class="bg-white rounded-3xl p-6 mb-10 shadow-md">
+    <section id="all-open-requests-section" class="bg-white rounded-3xl p-6 mb-10 shadow-md hidden">
       <h2 class="text-xl font-semibold mb-6">Open Requests from Other Users</h2>
       <div id="all-requests-container" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
       <p id="all-requests-loading" class="text-center text-gray-500 mt-4">Loading open requests...</p>
@@ -175,6 +153,37 @@
         <p id="my-requests-empty" class="hidden text-center text-gray-500 mt-4">You haven't posted any requests yet.</p>
       </div>
     </div>
+
+    <!-- Categories -->
+    <div class="flex flex-wrap justify-center gap-4 mb-8">
+      <button class="category-btn"><i class="fas fa-home text-blue-600 text-2xl"></i><br>Rentals</button>
+      <button class="category-btn"><i class="fas fa-shield-alt text-blue-600 text-2xl"></i><br>Insurance</button>
+      <button class="category-btn"><i class="fas fa-gavel text-blue-600 text-2xl"></i><br>Legal Help</button>
+      <button class="category-btn"><i class="fas fa-passport text-blue-600 text-2xl"></i><br>Visa</button>
+      <button class="category-btn"><span class="text-2xl font-bold">...</span><br>Others</button>
+    </div>
+
+    <!-- Featured Agents -->
+    <section class="bg-white rounded-3xl p-6 mb-10 shadow-md">
+      <h2 class="text-xl font-semibold mb-6 flex items-center">
+        Verified Agents
+        <span class="ml-2 inline-flex items-center justify-2 w-5 h-5 bg-green-500 text-white rounded-full">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </span>
+      </h2>
+      
+      <div id="featured-agents-container" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
+      <p id="featured-loading" class="text-center text-gray-500 mt-4">Verified agents...</p>
+    </section>
+
+    <!-- New Section for Random Agents -->
+    <section class="bg-white rounded-3xl p-6 mb-10 shadow-md">
+      <h2 class="text-xl font-semibold mb-6">Other Agents You Might Like</h2>
+      <div id="random-agents-container" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6"></div>
+      <p id="random-loading" class="text-center text-gray-500 mt-4">Loading other agents...</p>
+    </section>
 
     <!-- Why Choose Section -->
     <section class="flex flex-wrap justify-around items-center bg-white p-6 rounded-3xl shadow-md">
@@ -193,6 +202,323 @@
     </section>
   </main>
 
+  <!-- cHATBOT CODE STARTS -->
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Chatbot</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f400; /* Just for standalone viewing */
+      }
+  
+      #chat-icon {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        font-size: 30px;
+        cursor: pointer;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s ease;
+      }
+  
+      #chat-icon:hover {
+        background-color: #0056b3;
+      }
+  
+      #chat-box {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        width: 320px;
+        max-height: 450px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        visibility: hidden; /* Changed from display: none */
+        opacity: 0; /* Initial state for fade-in */
+        transform: translateY(20px); /* Initial state for slide-up */
+        transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* Smooth transition */
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        font-family: Arial, sans-serif;
+        z-index: 998;
+      }
+  
+      /* New class for visible state */
+      #chat-box.chat-box-visible {
+        visibility: visible;
+        opacity: 1;
+        transform: translateY(0);
+        display: flex; /* Ensure it uses flexbox when visible */
+      }
+  
+      #chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+        border-bottom: 1px solid #0056b3;
+      }
+  
+      #close-chat {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0 5px;
+        transition: color 0.3s ease;
+      }
+  
+      #close-chat:hover {
+        color: #e0e0e0;
+      }
+  
+      #chat-messages {
+        flex-grow: 1;
+        padding: 10px;
+        overflow-y: auto;
+        height: 350px; /* Fixed height for scrollable area */
+        display: flex;
+        flex-direction: column;
+      }
+  
+      .message {
+        margin-bottom: 10px;
+        padding: 8px 12px;
+        border-radius: 15px;
+        max-width: 80%;
+        word-wrap: break-word;
+        font-size: 14px;
+      }
+  
+      .user {
+        background-color: #d1eaff; /* Light blue */
+        align-self: flex-end;
+        text-align: right;
+        border-bottom-right-radius: 2px; /* Pointy corner */
+      }
+  
+      .bot {
+        background-color: #f0f0f0; /* Light grey */
+        align-self: flex-start;
+        border-bottom-left-radius: 2px; /* Pointy corner */
+      }
+  
+      #chat-input {
+        display: flex;
+        border-top: 1px solid #e0e0e0;
+        padding: 10px;
+        background-color: #f9f9f9;
+      }
+  
+      #user-input {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+        font-size: 14px;
+        margin-right: 8px;
+      }
+  
+      #send-btn {
+        padding: 10px 15px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+      }
+  
+      #send-btn:hover {
+        background-color: #0056b3;
+      }
+  
+      /* New: CSS for loading animation */
+      .loading-spinner {
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-left-color: #007bff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 5px;
+      }
+  
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+  
+  <!-- Chat Icon -->
+  <button id="chat-icon">💬</button>
+  
+  <!-- Chat Box -->
+  <div id="chat-box">
+    <div id="chat-header">
+      <span>Agent Spark AI Chat</span>
+      <button id="close-chat">&times;</button>
+    </div>
+    <div id="chat-messages"></div>
+    <div id="chat-input">
+      <input type="text" id="user-input" placeholder="Type your message..." />
+      <button id="send-btn">➤</button>
+    </div>
+  </div>
+  
+  <script>
+    const API_KEY = "AIzaSyDGjB6R8tYVCr10WieMNH-CuzG3eIMoapA"; // Replace with your Gemini API key
+    const MODEL_ID = "gemini-1.5-flash-002";
+    const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent?key=${API_KEY}`;
+  
+    const chatIcon = document.getElementById("chat-icon");
+    const chatBox = document.getElementById("chat-box");
+    const closeChatBtn = document.getElementById("close-chat"); // New: Close button
+    const sendBtn = document.getElementById("send-btn");
+    const userInput = document.getElementById("user-input");
+    const chatMessages = document.getElementById("chat-messages");
+  
+    // Function to handle closing animation
+    function closeChatWithAnimation() {
+      chatBox.classList.remove("chat-box-visible");
+      const handleTransitionEnd = () => {
+        chatBox.style.visibility = "hidden";
+        // Remove the event listener to prevent it from firing on other transitions
+        chatBox.removeEventListener("transitionend", handleTransitionEnd);
+      };
+      // Add event listener for when the transition finishes
+      chatBox.addEventListener("transitionend", handleTransitionEnd);
+    }
+  
+    // Toggle chatbox visibility and show welcome message
+    chatIcon.onclick = () => {
+      if (!chatBox.classList.contains("chat-box-visible")) { // Chatbox is currently hidden
+        chatBox.style.visibility = "visible"; // Make it visible before starting transition
+        chatBox.classList.add("chat-box-visible"); // Add class to trigger fade-in/slide-up
+        if (chatMessages.children.length === 0) { // Show welcome message only if chat is empty
+          appendMessage("bot", "Hello! I'm Agent Spark's AI assistant. How can I help you today?");
+          scrollToBottom();
+        }
+        userInput.focus(); // Focus on input when chatbox opens
+      } else { // Chatbox is currently visible
+        closeChatWithAnimation();
+      }
+    };
+  
+    // Close chatbox when close button is clicked
+    closeChatBtn.onclick = () => {
+      closeChatWithAnimation();
+    };
+  
+    // Send message on button click
+    sendBtn.onclick = sendMessage;
+  
+    // New: Send message on Enter key press
+    userInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+  
+    async function sendMessage() {
+      const message = userInput.value.trim();
+      if (!message) return;
+  
+      // Show user message
+      appendMessage("user", message);
+      userInput.value = "";
+      scrollToBottom();
+  
+      // Show loading animation
+      const loading = appendLoadingMessage("bot"); // Call new function for loading
+      scrollToBottom();
+  
+      // Call Gemini API
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: message }] }]
+          })
+        });
+        const data = await res.json();
+  
+        loading.remove(); // Remove the loading animation element
+  
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+        appendMessage("bot", reply);
+        scrollToBottom();
+      } catch (err) {
+        loading.remove(); // Remove the loading animation element even on error
+        appendMessage("bot", "❌ Error contacting Gemini. Please check your API key or network connection.");
+        console.error("Gemini API error:", err);
+      }
+    }
+  
+    function appendMessage(sender, text) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `message ${sender}`;
+      msgDiv.textContent = text;
+      chatMessages.appendChild(msgDiv);
+      return msgDiv;
+    }
+  
+    // New: Function to append a loading message with spinner
+    function appendLoadingMessage(sender) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = `message ${sender}`;
+      
+      const spinner = document.createElement("span");
+      spinner.className = "loading-spinner";
+      msgDiv.appendChild(spinner);
+  
+      const textSpan = document.createElement("span");
+      textSpan.textContent = "Typing...";
+      msgDiv.appendChild(textSpan);
+  
+      chatMessages.appendChild(msgDiv);
+      return msgDiv; // Return the message div so it can be removed later
+    }
+  
+    function scrollToBottom() {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  </script>
+  
+  </body>
+  </html>
+  
+  <!-- CHATBOT CODE ENDS -->
+
+  
   <!-- Request Details Modal -->
   <div id="requestDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl relative">
@@ -210,6 +536,7 @@
         <p class="text-gray-700 mb-1"><strong class="text-gray-900">Email:</strong> <span id="modalContactEmail"></span></p>
         <p class="text-gray-700"><strong class="text-gray-900">Phone:</strong> <span id="modalContactPhone"></span></p>
       </div>
+
     </div>
   </div>
 
@@ -243,11 +570,18 @@
       const modalStatus = document.getElementById('modalStatus');
       const modalPostedDate = document.getElementById('modalPostedDate');
       const modalContactName = document.getElementById('modalContactName');
-      const modalContactEmail = document = document.getElementById('modalContactEmail');
+      const modalContactEmail = document.getElementById('modalContactEmail');
       const modalContactPhone = document.getElementById('modalContactPhone');
 
       // New: Reference to the new toggle button for My Requests
       const myRequestsToggle = document.getElementById('myRequestsToggle');
+
+      // New: References for the "View Open Requests" toggle (now a regular button)
+      const viewOpenRequestsButton = document.getElementById('viewOpenRequestsButton');
+      const allOpenRequestsSection = document.getElementById('all-open-requests-section');
+
+      // New: Reference for the Chatbot toggle button
+      const chatbotToggle = document.getElementById('chatbotToggle');
 
       let currentUser = null; // New: Variable to store the logged-in user
       let allUserRequests = new Map(); // New: To store requests for easy lookup by ID
@@ -276,12 +610,16 @@
           if (!myRequestsModal.classList.contains('hidden')) {
               myRequestsModal.classList.add('hidden');
           }
+          // Hide open requests section if it's open
+          if (!allOpenRequestsSection.classList.contains('hidden')) {
+              allOpenRequestsSection.classList.add('hidden');
+          }
           console.log('Post Request button clicked. Form visibility:', !postRequestFormContainer.classList.contains('hidden'));
         });
       }
 
       // New: Add event listener for the My Requests toggle button
-      if (myRequestsToggle && myRequestsModal) { // Changed from myRequestsSection
+      if (myRequestsToggle && myRequestsModal) {
           myRequestsToggle.addEventListener('click', async (event) => {
               event.preventDefault();
 
@@ -294,19 +632,22 @@
               console.log('My Requests button clicked.');
 
               // Determine if the modal is currently hidden
-              const isCurrentlyHidden = myRequestsModal.classList.contains('hidden'); // Changed from myRequestsSection
-              console.log('Initial state of My Requests modal (hidden class present):', isCurrentlyHidden);
+              const isCurrentlyHidden = myRequestsModal.classList.contains('hidden');
 
               // Hide post request form if it's open
               if (!postRequestFormContainer.classList.contains('hidden')) {
                   postRequestFormContainer.classList.add('hidden');
                   console.log('Post Request form hidden.');
               }
+              // Hide open requests section if it's open
+              if (!allOpenRequestsSection.classList.contains('hidden')) {
+                  allOpenRequestsSection.classList.add('hidden');
+              }
 
               if (isCurrentlyHidden) {
                   // If currently hidden, show it
-                  myRequestsModal.classList.remove('hidden'); // Changed from myRequestsSection
-                  console.log('My Requests modal is now visible. Current classes:', myRequestsModal.classList.value); // Changed from myRequestsSection
+                  myRequestsModal.classList.remove('hidden');
+                  console.log('My Requests modal is now visible. Current classes:', myRequestsModal.classList.value);
 
                   if (currentUser) {
                       console.log('User is logged in. Loading requests...');
@@ -330,16 +671,52 @@
                       }
                   } else {
                       alert("Please log in to view your posted requests.");
-                      myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
-                      console.log('User not logged in. My Requests modal hidden. Current classes:', myRequestsModal.classList.value); // Changed from myRequestsSection
+                      myRequestsModal.classList.add('hidden');
+                      console.log('User not logged in. My Requests modal hidden. Current classes:', myRequestsModal.classList.value);
                   }
               } else {
                   // If currently visible, hide it
-                  myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
-                  console.log('My Requests modal is now hidden. Current classes:', myRequestsModal.classList.value); // Changed from myRequestsSection
+                  myRequestsModal.classList.add('hidden');
+                  console.log('My Requests modal is now hidden. Current classes:', myRequestsModal.classList.value);
               }
 
               isMyRequestsToggleProcessing = false; // Reset flag after processing
+          });
+      }
+
+      // New: Add event listener for the "View Open Requests" button (now a regular button)
+      if (viewOpenRequestsButton && allOpenRequestsSection) {
+          viewOpenRequestsButton.addEventListener('click', (event) => {
+              event.preventDefault();
+              allOpenRequestsSection.classList.toggle('hidden'); // Toggle visibility
+
+              // Hide other sections if they are open
+              if (!postRequestFormContainer.classList.contains('hidden')) {
+                  postRequestFormContainer.classList.add('hidden');
+              }
+              if (!myRequestsModal.classList.contains('hidden')) {
+                  myRequestsModal.classList.add('hidden');
+              }
+              console.log('View Open Requests button clicked. Section visibility:', !allOpenRequestsSection.classList.contains('hidden'));
+          });
+      }
+
+      // New: Add event listener for the Chatbot toggle button
+      if (chatbotToggle) {
+          chatbotToggle.addEventListener('click', (event) => {
+              // event.preventDefault(); // Removed to allow default navigation to chatbot.html
+              console.log('Chat with AI button clicked. Navigating to chatbot.html');
+
+              // Optionally, hide other sections if the chatbot opens a modal/panel
+              if (!postRequestFormContainer.classList.contains('hidden')) {
+                  postRequestFormContainer.classList.add('hidden');
+              }
+              if (!myRequestsModal.classList.contains('hidden')) {
+                  myRequestsModal.classList.add('hidden');
+              }
+              if (!allOpenRequestsSection.classList.contains('hidden')) {
+                  allOpenRequestsSection.classList.add('hidden');
+              }
           });
       }
 
