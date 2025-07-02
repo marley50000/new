@@ -508,7 +508,7 @@
         if (error) {
           console.error("Error getting user:", error.message);
           // Optionally display a login/signup link if there's an error or no user
-          userAuthSection.innerHTML = `<a href="#" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
+          userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
           myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
           currentUser = null; // Ensure currentUser is null
           console.log('No user found or error getting user. currentUser set to null.');
@@ -535,7 +535,7 @@
           // loadMyRequests(currentUser.id); // REMOVED: Loading now controlled by toggle button
         } else {
           // If no user is logged in, display a login/signup link
-          userAuthSection.innerHTML = `<a href="#" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
+          userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
           myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
           currentUser = null; // Ensure currentUser is null
           console.log('No user logged in. currentUser set to null.');
