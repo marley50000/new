@@ -15,7 +15,7 @@
 
 <body class="bg-[#ffff] min-h-screen p-4">
   <main class="max-w-7xl mx-auto fade-in">
-    <!-- New: Placeholder for user authentication status -->
+    <!-- User authentication status -->
     <div id="user-auth-section" class="text-right mb-4">
       <!-- Content will be dynamically loaded by JavaScript -->
     </div>
@@ -40,12 +40,12 @@
         </svg>
         Post a Request
       </a>
-      <!-- New button for My Requests -->
+      <!-- Button for My Requests -->
       <a id="myRequestsToggle" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-4">
         <i class="fas fa-history mr-3 h-5 w-5"></i>
         My Posted Requests
       </a>
-      <!-- New button for Open Requests from Other Users -->
+      <!-- Button for Open Requests from Other Users -->
       <a id="viewOpenRequestsButton" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mt-4 relative">
         <i class="fas fa-comments mr-3 h-5 w-5"></i>
         Open Requests
@@ -133,9 +133,6 @@
       </div>
     </div>
 
-    <!-- New: Container for the dynamically loaded chatbot -->
-    <div id="chatbot-container"></div>
-
     <!-- New Section for All Open Requests -->
     <section id="all-open-requests-section" class="bg-white rounded-3xl p-6 mb-10 shadow-md hidden">
       <h2 class="text-xl font-semibold mb-6">Open Requests from Other Users</h2>
@@ -203,11 +200,6 @@
     </section>
   </main>
 
-  <!-- cHATBOT CODE STARTS, add full chatbot code in the middle -->
-
-  <!-- CHATBOT CODE ENDS -->
-
-  
   <!-- Request Details Modal -->
   <div id="requestDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl relative">
@@ -225,7 +217,6 @@
         <p class="text-gray-700 mb-1"><strong class="text-gray-900">Email:</strong> <span id="modalContactEmail"></span></p>
         <p class="text-gray-700"><strong class="text-gray-900">Phone:</strong> <span id="modalContactPhone"></span></p>
       </div>
-
     </div>
   </div>
 
@@ -233,33 +224,27 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const supabaseUrl = 'https://qzddjvloicjwshggzctt.supabase.co';
-      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRqdmxvaWNqd3NoZ2d6Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDk5MzMsImV4cCI6MjA2NDk4NTkzM30.mkrERrCanIkNnIlch5UJ-OOJ9az7oXs1EFZijkf7y7o'; // Add your real key here
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRqdmxvaWNqd3NoZ2d6Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDk5MzMsImV4cCI6MjA2NDk4NTkzM30.mkrERrCanIkNnIlch5UJ-OOJ9az7oXs1EFZijkf7y7o';
       const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
       const storageBaseUrl = `${supabaseUrl}/storage/v1/object/public/agent-images/`;
       const userAuthSection = document.getElementById('user-auth-section');
     
-      // New: Supabase Realtime subscription for user_requests
+      // Supabase Realtime subscription for user_requests
       supabase
-        .channel('public:user_requests') // Channel name can be anything, but good practice to relate to table
+        .channel('public:user_requests')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'user_requests' }, payload => {
           console.log('Realtime change received for user_requests:', payload);
-          // Re-load all open requests whenever there's a change in the user_requests table
-          // This will update the badge and the list of open requests
           loadAllOpenRequests();
         })
         .subscribe();
 
-      // Get references to the new elements
+      // Get references to elements
       const postRequestToggle = document.getElementById('postRequestToggle');
       const postRequestFormContainer = document.getElementById('postRequestFormContainer');
-
-      // New: Reference to the "My Requests" section and its containers
-      const myRequestsModal = document.getElementById('myRequestsModal'); // Changed from myRequestsSection
+      const myRequestsModal = document.getElementById('myRequestsModal');
       const myRequestsContainer = document.getElementById('my-requests-container');
       const myRequestsLoading = document.getElementById('my-requests-loading');
       const myRequestsEmpty = document.getElementById('my-requests-empty');
-
-      // New: References to modal elements
       const requestDetailsModal = document.getElementById('requestDetailsModal');
       const closeRequestDetailsModalBtn = document.getElementById('closeRequestDetailsModal');
       const modalTitle = document.getElementById('modalTitle');
@@ -272,87 +257,65 @@
       const modalContactName = document.getElementById('modalContactName');
       const modalContactEmail = document.getElementById('modalContactEmail');
       const modalContactPhone = document.getElementById('modalContactPhone');
-
-      // New: Reference to the new toggle button for My Requests
       const myRequestsToggle = document.getElementById('myRequestsToggle');
-
-      // New: References for the "View Open Requests" toggle (now a regular button)
       const viewOpenRequestsButton = document.getElementById('viewOpenRequestsButton');
       const allOpenRequestsSection = document.getElementById('all-open-requests-section');
-      const openRequestsCountBadge = document.getElementById('openRequestsCountBadge'); // New: Reference to the badge
+      const openRequestsCountBadge = document.getElementById('openRequestsCountBadge');
 
-      // New: Reference for the Chatbot toggle button
-      const chatbotToggle = document.getElementById('chatbotToggle');
-
-      let currentUser = null; // New: Variable to store the logged-in user
-      let allUserRequests = new Map(); // New: To store requests for easy lookup by ID
-      let allOpenRequestsMap = new Map(); // New: To store all open requests for easy lookup by ID
-
-      // Add a flag to prevent multiple rapid clicks
+      let currentUser = null;
+      let allUserRequests = new Map();
+      let allOpenRequestsMap = new Map();
       let isMyRequestsToggleProcessing = false;
+      let currentChatRequestId = null;
+      let currentChatRecipientId = null;
+      let currentChatRecipientName = null;
+      let isChatMinimized = false;
 
       // Add event listener for the Post a Request button
       if (postRequestToggle && postRequestFormContainer) {
-        postRequestToggle.addEventListener('click', (event) => {
-          event.preventDefault(); // Prevent the default link behavior (navigating to a new page)
-
-          // Check if the form is currently hidden (meaning it's about to be shown)
-          const isFormCurrentlyHidden = postRequestFormContainer.classList.contains('hidden');
-
-          postRequestFormContainer.classList.toggle('hidden'); // Toggle the 'hidden' class to show/hide the form
-
-          // If the form is now visible (it was hidden before this click), clear any previous messages
-          if (isFormCurrentlyHidden) {
-              successMessage.classList.add('hidden');
-              errorMessage.classList.add('hidden');
-          }
-
-          // Hide my requests modal if it's open
-          if (!myRequestsModal.classList.contains('hidden')) {
-              myRequestsModal.classList.add('hidden');
-          }
-          // Hide open requests section if it's open
-          if (!allOpenRequestsSection.classList.contains('hidden')) {
-              allOpenRequestsSection.classList.add('hidden');
-          }
-          console.log('Post Request button clicked. Form visibility:', !postRequestFormContainer.classList.contains('hidden'));
-        });
+          postRequestToggle.addEventListener('click', (event) => {
+              event.preventDefault();
+              const isFormCurrentlyHidden = postRequestFormContainer.classList.contains('hidden');
+              postRequestFormContainer.classList.toggle('hidden');
+              
+              if (isFormCurrentlyHidden) {
+                  successMessage.classList.add('hidden');
+                  errorMessage.classList.add('hidden');
+              }
+              
+              if (!myRequestsModal.classList.contains('hidden')) {
+                  myRequestsModal.classList.add('hidden');
+              }
+              if (!allOpenRequestsSection.classList.contains('hidden')) {
+                  allOpenRequestsSection.classList.add('hidden');
+              }
+          });
       }
 
-      // New: Add event listener for the My Requests toggle button
+      // Add event listener for the My Requests toggle button
       if (myRequestsToggle && myRequestsModal) {
           myRequestsToggle.addEventListener('click', async (event) => {
               event.preventDefault();
 
               if (isMyRequestsToggleProcessing) {
-                  console.log('My Requests toggle already processing. Ignoring click.');
-                  return; // Ignore subsequent clicks while processing
+                  return;
               }
 
-              isMyRequestsToggleProcessing = true; // Set flag to true
-              console.log('My Requests button clicked.');
-
-              // Determine if the modal is currently hidden
+              isMyRequestsToggleProcessing = true;
+              
               const isCurrentlyHidden = myRequestsModal.classList.contains('hidden');
 
-              // Hide post request form if it's open
               if (!postRequestFormContainer.classList.contains('hidden')) {
                   postRequestFormContainer.classList.add('hidden');
-                  console.log('Post Request form hidden.');
               }
-              // Hide open requests section if it's open
               if (!allOpenRequestsSection.classList.contains('hidden')) {
                   allOpenRequestsSection.classList.add('hidden');
               }
 
               if (isCurrentlyHidden) {
-                  // If currently hidden, show it
                   myRequestsModal.classList.remove('hidden');
-                  console.log('My Requests modal is now visible. Current classes:', myRequestsModal.classList.value);
 
                   if (currentUser) {
-                      console.log('User is logged in. Loading requests...');
-                      // Add visual feedback for loading
                       const originalButtonContent = myRequestsToggle.innerHTML;
                       myRequestsToggle.innerHTML = `
                           <div class="flex items-center justify-center gap-2">
@@ -360,195 +323,142 @@
                               Loading...
                           </div>
                       `;
-                      // Temporarily disable pointer events to prevent clicks
                       myRequestsToggle.style.pointerEvents = 'none';
 
                       try {
                           await loadMyRequests(currentUser.id);
                       } finally {
-                          // Restore button state
                           myRequestsToggle.innerHTML = originalButtonContent;
                           myRequestsToggle.style.pointerEvents = 'auto';
                       }
                   } else {
                       alert("Please log in to view your posted requests.");
                       myRequestsModal.classList.add('hidden');
-                      console.log('User not logged in. My Requests modal hidden. Current classes:', myRequestsModal.classList.value);
                   }
               } else {
-                  // If currently visible, hide it
                   myRequestsModal.classList.add('hidden');
-                  console.log('My Requests modal is now hidden. Current classes:', myRequestsModal.classList.value);
               }
 
-              isMyRequestsToggleProcessing = false; // Reset flag after processing
+              isMyRequestsToggleProcessing = false;
           });
       }
 
-      // New: Add event listener for the "View Open Requests" button (now a regular button)
+      // Add event listener for the "View Open Requests" button
       if (viewOpenRequestsButton && allOpenRequestsSection) {
           viewOpenRequestsButton.addEventListener('click', (event) => {
               event.preventDefault();
-              allOpenRequestsSection.classList.toggle('hidden'); // Toggle visibility
-
-              // Hide other sections if they are open
+              allOpenRequestsSection.classList.toggle('hidden');
+              
               if (!postRequestFormContainer.classList.contains('hidden')) {
                   postRequestFormContainer.classList.add('hidden');
               }
               if (!myRequestsModal.classList.contains('hidden')) {
                   myRequestsModal.classList.add('hidden');
               }
-              console.log('View Open Requests button clicked. Section visibility:', !allOpenRequestsSection.classList.contains('hidden'));
           });
       }
 
-      // New: Add event listener for the Chatbot toggle button
-      if (chatbotToggle) {
-          chatbotToggle.addEventListener('click', (event) => {
-              // event.preventDefault(); // Removed to allow default navigation to chatbot.html
-              console.log('Chat with AI button clicked. Navigating to chatbot.html');
-
-              // Optionally, hide other sections if the chatbot opens a modal/panel
-              if (!postRequestFormContainer.classList.contains('hidden')) {
-                  postRequestFormContainer.classList.add('hidden');
-              }
-              if (!myRequestsModal.classList.contains('hidden')) {
-                  myRequestsModal.classList.add('hidden');
-              }
-              if (!allOpenRequestsSection.classList.contains('hidden')) {
-                  allOpenRequestsSection.classList.add('hidden');
-              }
-          });
-      }
-
-      // --- Start of new code for form submission ---
+      // Form submission
       const requestForm = document.getElementById('requestForm');
       const submitBtn = document.getElementById('submitBtn');
       const successMessage = document.getElementById('successMessage');
       const errorMessage = document.getElementById('errorMessage');
 
-      if (requestForm) { // Ensure the form exists before adding listener
-        requestForm.addEventListener('submit', async function(event) {
-          event.preventDefault();
+      if (requestForm) {
+          requestForm.addEventListener('submit', async function(event) {
+              event.preventDefault();
 
-          if (!currentUser) { // New: Check if user is logged in before submitting
-            errorMessage.textContent = "Please log in to post a request.";
-            errorMessage.classList.remove('hidden');
-            console.log('Form submission blocked: User not logged in.');
-            return;
-          }
+              if (!currentUser) {
+                  errorMessage.textContent = "Please log in to post a request.";
+                  errorMessage.classList.remove('hidden');
+                  return;
+              }
 
-          submitBtn.innerHTML = `
-            <div class="flex items-center gap-2">
-              <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              Posting...
-            </div>
-          `;
-          submitBtn.disabled = true;
-          successMessage.classList.add('hidden');
-          errorMessage.classList.add('hidden');
+              submitBtn.innerHTML = `
+                  <div class="flex items-center gap-2">
+                      <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Posting...
+                  </div>
+              `;
+              submitBtn.disabled = true;
+              successMessage.classList.add('hidden');
+              errorMessage.classList.add('hidden');
 
-          const formData = new FormData(requestForm);
-          const requestData = {
-            title: formData.get('title'),
-            category: formData.get('category'),
-            description: formData.get('description'),
-            location: formData.get('location'),
-            budget: formData.get('budget') ? parseFloat(formData.get('budget')) : null, // Convert to number or null
-            contact_name: formData.get('contactName'),
-            contact_email: formData.get('contactEmail'),
-            contact_phone: formData.get('contactPhone'),
-            status: 'open', // Default status for new requests
-            user_id: currentUser.id // This line ensures the user's ID is included
-          };
+              const formData = new FormData(requestForm);
+              const requestData = {
+                  title: formData.get('title'),
+                  category: formData.get('category'),
+                  description: formData.get('description'),
+                  location: formData.get('location'),
+                  budget: formData.get('budget') ? parseFloat(formData.get('budget')) : null,
+                  contact_name: formData.get('contactName'),
+                  contact_email: formData.get('contactEmail'),
+                  contact_phone: formData.get('contactPhone'),
+                  status: 'open',
+                  user_id: currentUser.id
+              };
 
-          console.log("Submitting request data:", requestData); // New: Log the data being sent
+              try {
+                  const { data, error } = await supabase
+                      .from('user_requests')
+                      .insert([requestData]);
 
-          try {
-            const { data, error } = await supabase
-              .from('user_requests') // This is the new table name
-              .insert([requestData]);
+                  if (error) {
+                      throw new Error(error.message);
+                  }
 
-            if (error) {
-              throw new Error(error.message);
-            }
-
-            successMessage.classList.remove('hidden');
-            requestForm.reset(); // Clear the form
-
-            // Hide the post request form and show the my requests modal
-            postRequestFormContainer.classList.add('hidden');
-            myRequestsModal.classList.remove('hidden');
-
-            // New: Reload user requests after a successful submission
-            loadMyRequests(currentUser.id);
-            loadAllOpenRequests(); // New: Also refresh all open requests for the badge and list
-            console.log('Request posted successfully. Reloading my requests and all open requests.');
-
-            // You can remove the redirect if you prefer to stay on the homepage
-            // setTimeout(() => {
-            //   window.location.reload(); // Reload page to reflect changes or just stay
-            // }, 3000);
-
-          } catch (error) {
-            console.error("Error posting request:", error);
-            errorMessage.textContent = "An error occurred: " + error.message;
-            errorMessage.classList.remove('hidden');
-          } finally {
-            submitBtn.innerHTML = 'Post Request';
-            submitBtn.disabled = false;
-          }
-        });
+                  successMessage.classList.remove('hidden');
+                  requestForm.reset();
+                  postRequestFormContainer.classList.add('hidden');
+                  myRequestsModal.classList.remove('hidden');
+                  loadMyRequests(currentUser.id);
+                  loadAllOpenRequests();
+              } catch (error) {
+                  console.error("Error posting request:", error);
+                  errorMessage.textContent = "An error occurred: " + error.message;
+                  errorMessage.classList.remove('hidden');
+              } finally {
+                  submitBtn.innerHTML = 'Post Request';
+                  submitBtn.disabled = false;
+              }
+          });
       }
-      // --- End of new code for form submission ---
 
       async function checkUserAndDisplayAuth() {
-        const { data: { user }, error } = await supabase.auth.getUser();
-    
-        if (error) {
-          console.error("Error getting user:", error.message);
-          // Optionally display a login/signup link if there's an error or no user
-          userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
-          myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
-          currentUser = null; // Ensure currentUser is null
-          console.log('No user found or error getting user. currentUser set to null.');
-          return;
-        }
-    
-        if (user) {
-          currentUser = user; // New: Store the user object
-          const userName = user.user_metadata?.full_name || user.email;
-          userAuthSection.innerHTML = `
-            <span class="text-gray-700 text-sm mr-2">Welcome, ${userName}!</span>
-            <button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-3 rounded-md">Logout</button>
-          `;
-          document.getElementById('logoutButton').addEventListener('click', async () => {
-            const { error: signOutError } = await supabase.auth.signOut();
-            if (signOutError) {
-              console.error("Error signing out:", signOutError.message);
-            } else {
-              window.location.reload(); // Reload page to reflect logged out state
-            }
-          });
-          console.log('User logged in:', userName, 'ID:', currentUser.id);
-          // myRequestsModal.classList.remove('hidden'); // REMOVED: Visibility now controlled by toggle button
-          // loadMyRequests(currentUser.id); // REMOVED: Loading now controlled by toggle button
-        } else {
-          // If no user is logged in, display a login/signup link
-          userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
-          myRequestsModal.classList.add('hidden'); // Changed from myRequestsSection
-          currentUser = null; // Ensure currentUser is null
-          console.log('No user logged in. currentUser set to null.');
-        }
+          const { data: { user }, error } = await supabase.auth.getUser();
+      
+          if (error) {
+              console.error("Error getting user:", error.message);
+              userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
+              myRequestsModal.classList.add('hidden');
+              currentUser = null;
+              return;
+          }
+      
+          if (user) {
+              currentUser = user;
+              const userName = user.user_metadata?.full_name || user.email;
+              userAuthSection.innerHTML = `
+                  <span class="text-gray-700 text-sm mr-2">Welcome, ${userName}!</span>
+                  <button id="logoutButton" class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-3 rounded-md">Logout</button>
+              `;
+              document.getElementById('logoutButton').addEventListener('click', async () => {
+                  const { error: signOutError } = await supabase.auth.signOut();
+                  if (!signOutError) {
+                      window.location.reload();
+                  }
+              });
+          } else {
+              userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
+              myRequestsModal.classList.add('hidden');
+              currentUser = null;
+          }
       }
-    
-      // Call this function when the page loads to check user status
-      checkUserAndDisplayAuth().then(() => {
-          // After user status is checked, load all open requests
-          loadAllOpenRequests();
-      });
 
-      // New: Function to display request details in the modal
+      function formatTimestamp(date) {
+          return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+
       function displayRequestDetailsModal(request) {
           modalTitle.textContent = request.title;
           modalCategory.textContent = request.category;
@@ -556,312 +466,289 @@
           modalLocation.textContent = request.location || 'N/A';
           modalBudget.textContent = request.budget ? `GH₵ ${request.budget.toLocaleString()}` : 'N/A';
           modalStatus.textContent = request.status;
-          modalStatus.className = `font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}`; // Apply status color
-          modalPostedDate.textContent = new Date(request.created_at).toLocaleString(); // Changed to toLocaleString()
+          modalStatus.className = `font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}`;
+          modalPostedDate.textContent = new Date(request.created_at).toLocaleString();
           modalContactName.textContent = request.contact_name;
           modalContactEmail.textContent = request.contact_email;
           modalContactPhone.textContent = request.contact_phone;
           requestDetailsModal.classList.remove('hidden');
-          console.log('Displaying request details modal for request ID:', request.id);
       }
 
-      // New: Function to close the request details modal
       function closeRequestDetailsModal() {
           requestDetailsModal.classList.add('hidden');
-          console.log('Request details modal closed.');
       }
 
-      // New: Event listeners for closing the modal
       closeRequestDetailsModalBtn.addEventListener('click', closeRequestDetailsModal);
       requestDetailsModal.addEventListener('click', (event) => {
-          if (event.target === requestDetailsModal) { // Close if clicking on the overlay
+          if (event.target === requestDetailsModal) {
               closeRequestDetailsModal();
           }
       });
 
-      // New: Function to close the My Requests modal
       const closeMyRequestsModalBtn = document.getElementById('closeMyRequestsModal');
       closeMyRequestsModalBtn.addEventListener('click', () => {
           myRequestsModal.classList.add('hidden');
-          console.log('My Requests modal closed.');
       });
 
       myRequestsModal.addEventListener('click', (event) => {
-          if (event.target === myRequestsModal) { // Close if clicking on the overlay
+          if (event.target === myRequestsModal) {
               myRequestsModal.classList.add('hidden');
-              console.log('My Requests modal closed by overlay click.');
           }
       });
 
-      // New: Function to load and display user's requests
       async function loadMyRequests(userId) {
-        console.log('Attempting to load requests for user ID:', userId);
-        myRequestsContainer.innerHTML = ''; // Clear previous requests
-        myRequestsLoading.classList.remove('hidden'); // Show loading message
-        myRequestsEmpty.classList.add('hidden'); // Hide empty message
-        allUserRequests.clear(); // Clear previous requests from map
+          console.log('Attempting to load requests for user ID:', userId);
+          myRequestsContainer.innerHTML = '';
+          myRequestsLoading.classList.remove('hidden');
+          myRequestsEmpty.classList.add('hidden');
+          allUserRequests.clear();
 
-        const { data, error } = await supabase
-          .from('user_requests')
-          .select('*')
-          .eq('user_id', userId) // Filter by the current user's ID
-          .order('created_at', { ascending: false }); // Show newest first
+          const { data, error } = await supabase
+              .from('user_requests')
+              .select('*')
+              .eq('user_id', userId)
+              .order('created_at', { ascending: false });
 
-        myRequestsLoading.classList.add('hidden'); // Hide loading message
+          myRequestsLoading.classList.add('hidden');
 
-        if (error) {
-          console.error("Error loading user requests:", error.message);
-          myRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load your requests.</p>`;
-          return;
-        }
+          if (error) {
+              console.error("Error loading user requests:", error.message);
+              myRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load your requests.</p>`;
+              return;
+          }
 
-        console.log('Supabase response for user requests:', data);
+          if (data.length === 0) {
+              myRequestsEmpty.classList.remove('hidden');
+              return;
+          }
 
-        if (data.length === 0) {
-          myRequestsEmpty.classList.remove('hidden'); // Show empty message
-          console.log('No requests found for this user.');
-          return;
-        }
+          data.forEach(request => {
+              allUserRequests.set(request.id, request);
+              myRequestsContainer.innerHTML += `
+                  <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
+                      <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
+                      <p class="text-sm text-gray-600 mb-2">${request.category}</p>
+                      <p class="text-sm text-gray-700 mb-3">${request.description.substring(0, 100)}${request.description.length > 100 ? '...' : ''}</p>
+                      <div class="flex justify-between items-center text-xs text-gray-500">
+                          <span>Location: ${request.location || 'N/A'}</span>
+                          <span>Budget: GH₵ ${request.budget ? request.budget.toLocaleString() : 'N/A'}</span>
+                      </div>
+                      <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
+                          <span>Status: <span class="font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}">${request.status}</span></span>
+                          <span>Posted: ${new Date(request.created_at).toLocaleString()}</span>
+                      </div>
+                      <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-4 text-sm view-details-btn" data-request-id="${request.id}">View Details</button>
+                  </article>
+              `;
+          });
 
-        data.forEach(request => {
-          allUserRequests.set(request.id, request); // Store request in map for easy lookup
-          myRequestsContainer.innerHTML += `
-            <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
-              <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
-              <p class="text-sm text-gray-600 mb-2">${request.category}</p>
-              <p class="text-sm text-gray-700 mb-3">${request.description.substring(0, 100)}${request.description.length > 100 ? '...' : ''}</p>
-              <div class="flex justify-between items-center text-xs text-gray-500">
-                <span>Location: ${request.location || 'N/A'}</span>
-                <span>Budget: GH₵ ${request.budget ? request.budget.toLocaleString() : 'N/A'}</span>
-              </div>
-              <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
-                <span>Status: <span class="font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}">${request.status}</span></span>
-                <span>Posted: ${new Date(request.created_at).toLocaleString()}</span> // Changed to toLocaleString()
-              </div>
-              <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-4 text-sm view-details-btn" data-request-id="${request.id}">View Details</button>
-            </article>
-          `;
-        });
-        console.log('Requests rendered to container.');
-
-        // Attach event listeners to the newly created "View Details" buttons
-        document.querySelectorAll('.view-details-btn').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const requestId = event.target.dataset.requestId;
-                console.log('View Details button clicked for request ID:', requestId); // Added for debugging
-                const request = allUserRequests.get(requestId);
-                if (request) {
-                    displayRequestDetailsModal(request);
-                } else {
-                    console.error('Request not found in map for ID:', requestId); // Added for debugging
-                }
-            });
-        });
+          document.querySelectorAll('.view-details-btn').forEach(button => {
+              button.addEventListener('click', (event) => {
+                  const requestId = event.target.dataset.requestId;
+                  const request = allUserRequests.get(requestId);
+                  if (request) {
+                      displayRequestDetailsModal(request);
+                  }
+              });
+          });
       }
 
-      // Utility function to shuffle an array (Fisher-Yates algorithm)
       function shuffleArray(array) {
           for (let i = array.length - 1; i > 0; i--) {
               const j = Math.floor(Math.random() * (i + 1));
-              [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+              [array[i], array[j]] = [array[j], array[i]];
           }
           return array;
       }
-    
-      async function loadFeaturedAgents() { // Renamed from loadAgents
-        const { data, error } = await supabase
-            .from('agents')
-            .select('*')
-            .order('is_featured', { ascending: false })  // show featured first
-            .order('created_at', { ascending: false });   // then newest first
 
-        const container = document.getElementById('featured-agents-container'); // Updated ID
-        const loading = document.getElementById('featured-loading'); // Updated ID
-    
-        if (error || !data) {
-            loading.textContent = "Failed to load featured agents.";
-            return;
-        }
-    
-        container.innerHTML = '';
-        loading.style.display = 'none';
+      async function loadFeaturedAgents() {
+          const { data, error } = await supabase
+              .from('agents')
+              .select('*')
+              .order('is_featured', { ascending: false })
+              .order('created_at', { ascending: false });
 
-        // Filter to only display agents explicitly marked as featured
-        const featuredAgents = data.filter(agent => agent.is_featured);
+          const container = document.getElementById('featured-agents-container');
+          const loading = document.getElementById('featured-loading');
 
-        if (featuredAgents.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No featured agents available at the moment.</p>';
-            return;
-        }
-    
-        for (const agent of featuredAgents) { // Iterate over filtered featuredAgents
-          let photoUrl = 'https://via.placeholder.com/300';
-          if (agent.photo_path) {
-            // Ensure photo_path doesn't duplicate the bucket name already in storageBaseUrl
-            const cleanedPath = agent.photo_path.startsWith('agent-images/')
-                ? agent.photo_path.replace('agent-images/', '')
-                : agent.photo_path;
-            photoUrl = `${storageBaseUrl}${cleanedPath}`;
+          if (error || !data) {
+              loading.textContent = "Failed to load featured agents.";
+              return;
           }
-    
-          container.innerHTML += `
-            <article class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
-              <img src="${photoUrl}" class="w-full object-cover object-top aspect-square" alt="${agent.full_name}" />
-              <div class="p-3">
-                <h3 class="font-semibold text-base">${agent.full_name}</h3>
-               <p class="text-sm text-green-500 flex items-center">
-  <span class="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full mr-1">
-    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.09 3.36h3.53c.969 0 1.371 1.24.588 1.81l-2.857 2.073 1.09 3.36c.3.922-.755 1.688-1.54 1.118L10 12.347l-2.857 2.073c-.784.57-1.838-.196-1.539-1.118l1.09-3.36-2.857-2.073c-.784-.57-.38-1.81.588-1.81h3.53l1.09-3.36z"/>
-    </svg>
-  </span>
-  ${agent.rating || '4.5'}
-</p>
 
-                <p class="text-xs text-gray-800">${agent.category || 'Agent'}</p>
-                <button class="mt-2 bg-blue-900 hover:bg-green-600 text-white rounded-md py-1 px-4 text-sm w-full">
-  View Profile
-</button>
+          container.innerHTML = '';
+          loading.style.display = 'none';
 
-              </div>
-            </article>`;
-        }
+          const featuredAgents = data.filter(agent => agent.is_featured);
+
+          if (featuredAgents.length === 0) {
+              container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No featured agents available at the moment.</p>';
+              return;
+          }
+
+          for (const agent of featuredAgents) {
+              let photoUrl = 'https://via.placeholder.com/300';
+              if (agent.photo_path) {
+                  const cleanedPath = agent.photo_path.startsWith('agent-images/')
+                      ? agent.photo_path.replace('agent-images/', '')
+                      : agent.photo_path;
+                  photoUrl = `${storageBaseUrl}${cleanedPath}`;
+              }
+
+              container.innerHTML += `
+                  <article class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+                      <img src="${photoUrl}" class="w-full object-cover object-top aspect-square" alt="${agent.full_name}" />
+                      <div class="p-3">
+                          <h3 class="font-semibold text-base">${agent.full_name}</h3>
+                          <p class="text-sm text-green-500 flex items-center">
+                              <span class="inline-flex items-center justify-center w-5 h-5 bg-green-500 text-white rounded-full mr-1">
+                                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.09 3.36h3.53c.969 0 1.371 1.24.588 1.81l-2.857 2.073 1.09 3.36c.3.922-.755 1.688-1.54 1.118L10 12.347l-2.857 2.073c-.784.57-1.838-.196-1.539-1.118l1.09-3.36-2.857-2.073c-.784-.57-.38-1.81.588-1.81h3.53l1.09-3.36z"/>
+                                  </svg>
+                              </span>
+                              ${agent.rating || '4.5'}
+                          </p>
+                          <p class="text-xs text-gray-800">${agent.category || 'Agent'}</p>
+                          <button class="mt-2 bg-blue-900 hover:bg-green-600 text-white rounded-md py-1 px-4 text-sm w-full">
+                              View Profile
+                          </button>
+                      </div>
+                  </article>`;
+          }
       }
 
       async function loadRandomAgents() {
-        const { data, error } = await supabase
-            .from('agents')
-            .select('*')
-            .eq('is_featured', false) // Only get non-featured agents
-            .limit(20); // Fetch a reasonable number to shuffle from
+          const { data, error } = await supabase
+              .from('agents')
+              .select('*')
+              .eq('is_featured', false)
+              .limit(20);
 
-        const container = document.getElementById('random-agents-container');
-        const loading = document.getElementById('random-loading');
+          const container = document.getElementById('random-agents-container');
+          const loading = document.getElementById('random-loading');
 
-        if (error || !data) {
-            loading.textContent = "Failed to load other agents.";
-            return;
-        }
+          if (error || !data) {
+              loading.textContent = "Failed to load other agents.";
+              return;
+          }
 
-        container.innerHTML = '';
-        loading.style.display = 'none';
+          container.innerHTML = '';
+          loading.style.display = 'none';
 
-        if (data.length === 0) {
-            container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No other agents available at the moment.</p>';
-            return;
-        }
+          if (data.length === 0) {
+              container.innerHTML = '<p class="text-center text-gray-500 col-span-full">No other agents available at the moment.</p>';
+              return;
+          }
 
-        const shuffledAgents = shuffleArray(data).slice(0, 8); // Shuffle and take up to 8 random agents
+          const shuffledAgents = shuffleArray(data).slice(0, 8);
 
-        for (const agent of shuffledAgents) {
-            let photoUrl = 'https://via.placeholder.com/300';
-            if (agent.photo_path) {
-                // Ensure photo_path doesn't duplicate the bucket name already in storageBaseUrl
-                const cleanedPath = agent.photo_path.startsWith('agent-images/')
-                    ? agent.photo_path.replace('agent-images/', '')
-                    : agent.photo_path;
-                photoUrl = `${storageBaseUrl}${cleanedPath}`;
-            }
+          for (const agent of shuffledAgents) {
+              let photoUrl = 'https://via.placeholder.com/300';
+              if (agent.photo_path) {
+                  const cleanedPath = agent.photo_path.startsWith('agent-images/')
+                      ? agent.photo_path.replace('agent-images/', '')
+                      : agent.photo_path;
+                  photoUrl = `${storageBaseUrl}${cleanedPath}`;
+              }
 
-            container.innerHTML += `
-                <article class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
-                  <img src="${photoUrl}" class="w-full object-cover object-top aspect-square" alt="${agent.full_name}" />
-                  <div class="p-3">
-                    <h3 class="font-semibold text-base">${agent.full_name}</h3>
-                    <p class="text-sm text-yellow-500"><i class="fas fa-star"></i> ${agent.rating || '4.5'}</p>
-                    <p class="text-xs text-gray-800">${agent.category || 'Agent'}</p>
-                    <button class="mt-2 bg-blue-600 text-white rounded-md py-1 px-4 text-sm w-full">View Profile</button>
-                  </div>
-                </article>`;
-        }
+              container.innerHTML += `
+                  <article class="bg-[#f7f9fc] rounded-xl overflow-hidden shadow-sm flex flex-col">
+                      <img src="${photoUrl}" class="w-full object-cover object-top aspect-square" alt="${agent.full_name}" />
+                      <div class="p-3">
+                          <h3 class="font-semibold text-base">${agent.full_name}</h3>
+                          <p class="text-sm text-yellow-500"><i class="fas fa-star"></i> ${agent.rating || '4.5'}</p>
+                          <p class="text-xs text-gray-800">${agent.category || 'Agent'}</p>
+                          <button class="mt-2 bg-blue-600 text-white rounded-md py-1 px-4 text-sm w-full">View Profile</button>
+                      </div>
+                  </article>`;
+          }
       }
 
-      // New: Function to load and display all open requests
       async function loadAllOpenRequests() {
-        console.log('Attempting to load all open requests...');
-        const allRequestsContainer = document.getElementById('all-requests-container');
-        const allRequestsLoading = document.getElementById('all-requests-loading');
-        const allRequestsEmpty = document.getElementById('all-requests-empty');
+          const allRequestsContainer = document.getElementById('all-requests-container');
+          const allRequestsLoading = document.getElementById('all-requests-loading');
+          const allRequestsEmpty = document.getElementById('all-requests-empty');
 
-        allRequestsContainer.innerHTML = ''; // Clear previous requests
-        allRequestsLoading.classList.remove('hidden'); // Show loading message
-        allRequestsEmpty.classList.add('hidden'); // Hide empty message
-        allOpenRequestsMap.clear(); // Clear previous requests from map
-        openRequestsCountBadge.classList.add('hidden'); // Hide badge by default
+          allRequestsContainer.innerHTML = '';
+          allRequestsLoading.classList.remove('hidden');
+          allRequestsEmpty.classList.add('hidden');
+          allOpenRequestsMap.clear();
+          openRequestsCountBadge.classList.add('hidden');
 
-        const { data, error } = await supabase
-          .from('user_requests')
-          .select('*')
-          .eq('status', 'open') // Only fetch open requests
-          .order('created_at', { ascending: false }); // Show newest first
+          const { data, error } = await supabase
+              .from('user_requests')
+              .select('*')
+              .eq('status', 'open')
+              .order('created_at', { ascending: false });
 
-        allRequestsLoading.classList.add('hidden'); // Hide loading message
+          allRequestsLoading.classList.add('hidden');
 
-        if (error) {
-          console.error("Error loading all open requests:", error.message);
-          allRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load open requests.</p>`;
-          return;
-        }
+          if (error) {
+              console.error("Error loading all open requests:", error.message);
+              allRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load open requests.</p>`;
+              return;
+          }
 
-        console.log('Supabase response for all open requests:', data);
+          let requestsRenderedCount = 0;
 
-        let requestsRenderedCount = 0; // Initialize a counter for rendered requests
+          if (data.length > 0) {
+              openRequestsCountBadge.textContent = data.length;
+              openRequestsCountBadge.classList.remove('hidden');
 
-        if (data.length > 0) {
-          // Update the badge with the count
-          openRequestsCountBadge.textContent = data.length;
-          openRequestsCountBadge.classList.remove('hidden');
+              data.forEach(request => {
+                  // Skip requests from the current user if logged in
+                  if (currentUser && request.user_id === currentUser.id) {
+                      return;
+                  }
 
-          data.forEach(request => {
-            // The filter for currentUser was removed in the last turn.
-            // So, every 'open' request should now be processed.
-            console.log('Processing request:', request.id, request.title); // New: Log each request being processed
+                  allOpenRequestsMap.set(request.id, request);
 
-            allOpenRequestsMap.set(request.id, request); // Store request in map
+                  allRequestsContainer.innerHTML += `
+                      <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
+                          <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
+                          <p class="text-sm text-gray-600 mb-2">${request.category}</p>
+                          <p class="text-sm text-gray-700 mb-3">${request.description.substring(0, 100)}${request.description.length > 100 ? '...' : ''}</p>
+                          <div class="flex justify-between items-center text-xs text-gray-500">
+                              <span>Location: ${request.location || 'N/A'}</span>
+                              <span>Budget: GH₵ ${request.budget ? request.budget.toLocaleString() : 'N/A'}</span>
+                          </div>
+                          <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
+                              <span>Posted: ${new Date(request.created_at).toLocaleString()}</span>
+                          </div>
+                          <button class="mt-4 bg-green-600 hover:bg-green-700 text-white rounded-md py-2 px-4 text-sm respond-to-request-btn" data-request-id="${request.id}">Respond to Request</button>
+                      </article>
+                  `;
+                  requestsRenderedCount++;
+              });
+          }
 
-            allRequestsContainer.innerHTML += `
-              <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
-                <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
-                <p class="text-sm text-gray-600 mb-2">${request.category}</p>
-                <p class="text-sm text-gray-700 mb-3">${request.description.substring(0, 100)}${request.description.length > 100 ? '...' : ''}</p>
-                <div class="flex justify-between items-center text-xs text-gray-500">
-                  <span>Location: ${request.location || 'N/A'}</span>
-                  <span>Budget: GH₵ ${request.budget ? request.budget.toLocaleString() : 'N/A'}</span>
-                </div>
-                <div class="flex justify-between items-center text-xs text-gray-500 mt-1">
-                  <span>Posted: ${new Date(request.created_at).toLocaleString()}</span>
-                </div>
-                <button class="mt-4 bg-green-600 hover:bg-green-700 text-white rounded-md py-2 px-4 text-sm respond-to-request-btn" data-request-id="${request.id}">Respond to Request</button>
-              </article>
-            `;
-            requestsRenderedCount++; // Increment counter for each request actually added to the DOM
+          if (requestsRenderedCount === 0) {
+              allRequestsEmpty.classList.remove('hidden');
+          }
+
+          // Attach event listeners to the "Respond to Request" buttons
+          document.querySelectorAll('.respond-to-request-btn').forEach(button => {
+              button.addEventListener('click', (event) => {
+                  if (!currentUser) {
+                      alert("Please log in as an agent to respond to requests.");
+                      return;
+                  }
+                  const requestId = event.target.dataset.requestId;
+                  const request = allOpenRequestsMap.get(requestId);
+                  if (request) {
+                      const chatUrl = `agents chat.html?request_id=${request.id}&user_id=${request.user_id}&agent_id=${currentUser.id}`;
+                      window.open(chatUrl, '_blank'); // Open chat in a new tab
+                  }
+              });
           });
-        }
-
-        // After iterating through all data, check if any requests were actually rendered
-        if (requestsRenderedCount === 0) {
-          allRequestsEmpty.classList.remove('hidden'); // Show the "empty" message
-          console.log('No open requests found.'); // Updated log message
-        } else {
-          console.log(`${requestsRenderedCount} open requests rendered.`); // Updated log message
-        }
-
-        // Attach event listeners to the "Respond to Request" buttons
-        document.querySelectorAll('.respond-to-request-btn').forEach(button => {
-            button.addEventListener('click', (event) => {
-                const requestId = event.target.dataset.requestId;
-                const request = allOpenRequestsMap.get(requestId);
-                if (request) {
-                    displayRequestDetailsModal(request); // Reuse existing modal to show details
-                } else {
-                    console.error('Request not found in map for ID:', requestId);
-                }
-            });
-        });
       }
-    
-      loadFeaturedAgents(); // Call the renamed function
-      loadRandomAgents();   // Call the new function
+
+      // Initialize the page
+      checkUserAndDisplayAuth().then(() => {
+          loadAllOpenRequests();
+          loadFeaturedAgents();
+          loadRandomAgents();
+      });
     });
   </script>
 </body>

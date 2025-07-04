@@ -2,7 +2,13 @@
 // It's generally recommended to handle keys more securely in a backend or environment variables
 const supabaseUrl = 'https://qzddjvloicjwshggzctt.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRqdmxvaWNqd3NoZ2d6Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDk5MzMsImV4cCI6MjA2NDk4NTkzM30.mkrERrCanIkNnIlch5UJ-OOJ9az7oXs1EFZijkf7y7o';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+  realtime: {
+    reconnect: true,
+    maxRetries: 5,
+    timeout: 30000
+  }
+});
 
 // Function to fetch and display user's requests
 async function fetchUserRequests() {
