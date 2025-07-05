@@ -522,9 +522,73 @@
               return;
           }
 
-          data.forEach(request => {
+          // Use a temporary array to store HTML strings to avoid repeated DOM manipulation
+          // and use Promise.all to wait for all async operations within the loop
+          const requestHtmlPromises = data.map(async request => {
               allUserRequests.set(request.id, request);
-              myRequestsContainer.innerHTML += `
+
+              let chatButtonHtml = '';
+              let agentIdForChat = null;
+              let agentNameForChat = 'Agent'; // Default name for the agent
+
+              // Try to find an agent ID from existing conversations for this request
+              // We look for any message associated with this request_id
+              const { data: conversationMessages, error: conversationError } = await supabase
+                  .from('request_conversations')
+                  .select('sender_id, receiver_id')
+                  .eq('request_id', request.id)
+                  .limit(1); // Just need one message to identify an agent
+
+              if (conversationError) {
+                  console.error("Error fetching conversation for request:", conversationError);
+              }
+
+              if (conversationMessages && conversationMessages.length > 0) {
+                  const message = conversationMessages[0];
+                  // Determine which ID is the agent's ID (the one that is not the current user's ID)
+                  if (message.sender_id !== currentUser.id) {
+                      agentIdForChat = message.sender_id;
+                  } else if (message.receiver_id !== currentUser.id) {
+                      agentIdForChat = message.receiver_id;
+                  }
+
+                  if (agentIdForChat) {
+                      // Fetch agent's name from the 'agents' table
+                      const { data: agentData, error: agentError } = await supabase
+                          .from('agents')
+                          .select('full_name')
+                          .eq('id', agentIdForChat)
+                          .single();
+                      if (agentError) {
+                          console.error("Error fetching agent details:", agentError);
+                      }
+                      if (agentData && agentData.full_name) {
+                          agentNameForChat = agentData.full_name;
+                      }
+                  }
+              }
+
+              if (agentIdForChat) {
+                  // If an agent ID is found, create the "Chat with Agent" button
+                  chatButtonHtml = `
+                      <button class="mt-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md py-2 px-4 text-sm chat-with-agent-btn"
+                              data-request-id="${request.id}"
+                              data-user-id="${currentUser.id}"
+                              data-agent-id="${agentIdForChat}"
+                              data-agent-name="${agentNameForChat}">
+                          Chat with ${agentNameForChat}
+                      </button>
+                  `;
+              } else {
+                  // If no agent ID is found (no conversation started yet), disable the button
+                  chatButtonHtml = `
+                      <button class="mt-2 bg-gray-400 text-white rounded-md py-2 px-4 text-sm cursor-not-allowed" disabled>
+                          No Agent Chat Yet
+                      </button>
+                  `;
+              }
+
+              return `
                   <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
                       <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
                       <p class="text-sm text-gray-600 mb-2">${request.category}</p>
@@ -538,16 +602,41 @@
                           <span>Posted: ${new Date(request.created_at).toLocaleString()}</span>
                       </div>
                       <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-4 text-sm view-details-btn" data-request-id="${request.id}">View Details</button>
+                      ${chatButtonHtml}
                   </article>
               `;
           });
 
+          // Wait for all HTML strings to be generated before updating the DOM
+          const requestHtmls = await Promise.all(requestHtmlPromises);
+          myRequestsContainer.innerHTML = requestHtmls.join('');
+
+
+          // Attach event listeners to the "View Details" buttons
           document.querySelectorAll('.view-details-btn').forEach(button => {
               button.addEventListener('click', (event) => {
                   const requestId = event.target.dataset.requestId;
                   const request = allUserRequests.get(requestId);
                   if (request) {
                       displayRequestDetailsModal(request);
+                  }
+              });
+          });
+
+          // Attach event listeners to the new "Chat with Agent" buttons
+          document.querySelectorAll('.chat-with-agent-btn').forEach(button => {
+              button.addEventListener('click', (event) => {
+                  const requestId = event.target.dataset.requestId;
+                  const userId = event.target.dataset.userId;
+                  const agentId = event.target.dataset.agentId;
+                  const agentName = event.target.dataset.agentName;
+                  
+                  if (requestId && userId && agentId) {
+                      // Open the user_chat.html page in a new tab with relevant parameters
+                      const chatUrl = `user_chat.html?request_id=${requestId}&user_id=${userId}&agent_id=${agentId}&agent_name=${encodeURIComponent(agentName)}`;
+                      window.open(chatUrl, '_blank');
+                  } else {
+                      alert("Could not open chat. Missing request, user, or agent ID.");
                   }
               });
           });
@@ -696,10 +785,8 @@
               openRequestsCountBadge.classList.remove('hidden');
 
               data.forEach(request => {
-                  // Skip requests from the current user if logged in
-                  if (currentUser && request.user_id === currentUser.id) {
-                      return;
-                  }
+                  // Removed the condition that skips requests from the current user.
+                  // Now, all open requests will be displayed.
 
                   allOpenRequestsMap.set(request.id, request);
 

@@ -3,180 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WhatsApp-like Chat</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <title>User Chat</title>
+    <script src="https://unpkg.com/@supabase/supabase-js"></script>
     <style>
         :root {
-            --primary-color: #25D366;
-            --secondary-color: #128C7E;
-            --light-color: #DCF8C6;
-            --dark-color: #075E54;
+            --primary-color: #4CAF50; /* Green */
+            --secondary-color: #2196F3; /* Blue */
+            --background-color: #f0f2f5;
+            --chat-bg: #ffffff;
             --text-color: #333;
-            --white: #ffffff;
-            --gray-light: #f0f0f0;
-            --gray-medium: #e5e5e5;
-            --gray-dark: #888;
+            --gray-light: #e0e0e0;
+            --gray-dark: #757575;
         }
-        
-        * {
-            box-sizing: border-box;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--background-color);
             color: var(--text-color);
         }
-        
+
         .chat-container {
-            max-width: 800px;
-            margin: 20px auto;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            background-color: var(--white);
+            width: 100%;
+            max-width: 600px;
+            height: 90vh;
             display: flex;
             flex-direction: column;
-            height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            background-color: var(--chat-bg);
         }
-        
+
         .chat-header {
             background-color: var(--secondary-color);
-            color: var(--white);
+            color: white;
             padding: 15px 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
             display: flex;
-            align-items: center;
             justify-content: space-between;
+            align-items: center;
         }
-        
+
         .chat-header h2 {
-            font-size: 18px;
-            font-weight: 500;
+            margin: 0;
+            flex-grow: 1;
+            text-align: left;
         }
-        
+
         .chat-messages {
-            flex: 1;
-            padding: 20px;
+            flex-grow: 1;
+            padding: 15px;
             overflow-y: auto;
-            background-color: #e5ddd5;
-            background-image: url('https://web.whatsapp.com/img/bg-chat-tile-light_a4be512e7195b6b733d9110b408f075d.png');
-            background-repeat: repeat;
-        }
-        
-        .message {
-            margin-bottom: 15px;
             display: flex;
             flex-direction: column;
-            max-width: 70%;
+            gap: 10px;
+            background-color: var(--background-color);
         }
-        
-        .message-sent {
-            align-items: flex-end;
-            margin-left: auto;
-        }
-        
-        .message-received {
-            align-items: flex-start;
-            margin-right: auto;
-        }
-        
-        .message-content {
+
+        .message {
+            max-width: 80%;
             padding: 10px 15px;
-            border-radius: 7.5px;
-            position: relative;
+            border-radius: 18px;
+            line-height: 1.4;
             word-wrap: break-word;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
         }
-        
-        .message-sent .message-content {
-            background-color: var(--light-color);
-            color: var(--text-color);
-            border-top-right-radius: 0;
-        }
-        
-        .message-received .message-content {
-            background-color: var(--white);
-            color: var(--text-color);
-            border-top-left-radius: 0;
-        }
-        
-        .message-info {
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-            color: var(--gray-dark);
-            margin-top: 5px;
-        }
-        
-        .message-time {
-            margin-left: 5px;
-        }
-        
-        .message-status {
-            margin-left: 5px;
-        }
-        
-        .chat-input {
-            display: flex;
-            padding: 10px;
-            background-color: var(--gray-light);
-            border-top: 1px solid var(--gray-medium);
-        }
-        
-        .chat-input textarea {
-            flex: 1;
-            border: none;
-            border-radius: 20px;
-            padding: 10px 15px;
-            resize: none;
-            outline: none;
-            font-size: 14px;
-            max-height: 100px;
-        }
-        
-        .send-button {
-            background-color: var(--primary-color);
-            color: var(--white);
-            border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            margin-left: 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background-color 0.2s;
-        }
-        
-        .send-button:hover {
-            background-color: var(--secondary-color);
-        }
-        
-        .send-button:disabled {
-            background-color: var(--gray-dark);
-            cursor: not-allowed;
-        }
-        
-        .typing-indicator {
-            font-size: 12px;
-            color: var(--gray-dark);
-            margin-left: 10px;
-            font-style: italic;
-        }
-        
-        .unread-count {
+
+        .message-sent {
+            align-self: flex-end;
             background-color: var(--primary-color);
             color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .message-received {
+            align-self: flex-start;
+            background-color: var(--gray-light);
+            color: var(--text-color);
+            border-bottom-left-radius: 2px;
+        }
+
+        .message-info {
+            font-size: 0.75em;
+            margin-top: 5px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 5px;
+            color: rgba(255, 255, 255, 0.7); /* For sent messages */
+        }
+
+        .message-received .message-info {
+            color: var(--gray-dark); /* For received messages */
+        }
+
+        .message-status {
+            font-size: 0.8em;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            background-color: var(--chat-bg);
+            align-items: flex-end;
+        }
+
+        .chat-input textarea {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 20px;
+            font-size: 1em;
+            resize: none;
+            max-height: 100px;
+            overflow-y: auto;
+            margin-right: 10px;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .chat-input textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        .send-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .send-button:hover:not(:disabled) {
+            background-color: #43A047; /* Darker green */
+        }
+
+        .send-button:disabled {
+            background-color: var(--gray-light);
+            cursor: not-allowed;
+        }
+
+        .send-button svg {
+            fill: currentColor;
+        }
+
+        .typing-indicator {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            margin-left: 5px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .typing-indicator span {
+            animation: blink 1.4s infinite;
+            animation-fill-mode: both;
+            font-weight: bold;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            20% { opacity: 1; }
+            100% { opacity: 0.2; }
         }
 
         .loading {
@@ -247,58 +260,79 @@
         try {
             _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             console.log('Supabase initialized successfully');
+        
+            // {{ EDIT_START }}
+            // Check the current user session immediately after Supabase initialization
+            _supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    console.log('Supabase Session found:', session);
+                    console.log('Authenticated User ID (auth.uid()):', session.user.id);
+                } else {
+                    console.log('No Supabase Session found. User is unauthenticated.');
+                }
+            }).catch(error => {
+                console.error('Error getting Supabase session:', error);
+            });
+            // {{ EDIT_END }}
+
         } catch (error) {
             console.error('Failed to initialize Supabase:', error);
             showError('Error connecting to chat service. Please refresh the page.');
         }
         
         // Chat state
-        let currentUser = null; // This will hold { id: agent_id }
-        let currentReceiverId = null; // This will hold the user's ID
-        let currentReceiverName = "Receiver";
+        let currentUser = null; // Will be set from Supabase Auth
+        let currentReceiverName = "Agent";
         let unsubscribe = null;
 
-        // Helper: get user_id, request_id, receiver_id from URL (or use defaults for testing)
+        // Helper: get user_id, request_id, agent_id from URL (or use defaults for testing)
         function getRequestIdFromURL() {
             const params = new URLSearchParams(window.location.search);
             return params.get('request_id');
         }
         function getAgentIdFromURL() {
             const params = new URLSearchParams(window.location.search);
-            return params.get('agent_id'); // This is the ID of the agent using this page
+            return params.get('agent_id');
         }
         function getUserIdFromURL() {
             const params = new URLSearchParams(window.location.search);
-            return params.get('user_id'); // This is the ID of the user the agent is chatting with
+            return params.get('user_id');
         }
 
         let currentRequestId = getRequestIdFromURL();
-        // Removed: let currentAgentId = getAgentIdFromURL();
-        // Removed: let currentUserId = getUserIdFromURL();
+        let currentAgentId = getAgentIdFromURL();
+        let currentUserId = getUserIdFromURL(); // This is the poster's ID from URL
 
         // Initialize chat when DOM is loaded
         document.addEventListener('DOMContentLoaded', async function() {
             try {
                 if (!_supabase) throw new Error('Supabase client not initialized.');
 
-                // Set current user (agent) and the user they are chatting with (receiver) from URL or defaults
-                const agentIdFromUrl = getAgentIdFromURL();
-                const userIdFromUrl = getUserIdFromURL();
+                // {{ EDIT_START }}
+                // Get the authenticated user from Supabase Auth
+                const { data: { user }, error: userError } = await _supabase.auth.getUser();
+                if (userError) throw userError;
+                if (!user) throw new Error('No authenticated user found. Please log in.');
 
-                currentUser = { id: agentIdFromUrl || 'agent-123' }; // The agent is the current user
-                currentReceiverId = userIdFromUrl || 'user-456'; // The user is the receiver for agent's messages
+                // Set currentUser.id to the authenticated user's ID
+                currentUser = { id: user.id };
+                // The receiver is the agent, whose ID comes from the URL
+                currentReceiverId = currentAgentId;
 
-                // Ensure currentRequestId is set
-                currentRequestId = currentRequestId || 'default-request-id';
+                // Ensure we have all necessary IDs
+                if (!currentRequestId || !currentUser.id || !currentReceiverId) {
+                    throw new Error('Missing chat parameters (request_id, user_id, or agent_id).');
+                }
+                // {{ EDIT_END }}
 
                 // --- ADDED LOGS FOR DEBUGGING ---
-                console.log('Chat Initialized:');
-                console.log('  currentUser.id (Agent ID):', currentUser.id); // This is the ID of the agent using this page
+                console.log('Chat Initialized (User Side):');
+                console.log('  currentUser.id (Authenticated User ID):', currentUser.id); // This is the poster's auth.uid()
                 console.log('  currentRequestId:', currentRequestId);
-                console.log('  currentReceiverId (User ID):', currentReceiverId); // This is the ID of the user the agent is chatting with
+                console.log('  currentReceiverId (Agent ID from URL):', currentReceiverId);
                 // --- END ADDED LOGS ---
 
-                // Fetch receiver details (optional)
+                // Fetch receiver details (Agent's name)
                 await fetchReceiverDetails();
 
                 // Initialize chat UI
@@ -316,20 +350,20 @@
             }
         });
 
-        // Example function to fetch receiver details
+        // Example function to fetch receiver details (Agent's name)
         async function fetchReceiverDetails() {
             try {
                 if (!currentReceiverId) return;
                 
-                // Fetch receiver details from your users table
+                // Fetch agent details from your agents table
                 const { data, error } = await _supabase
-                    .from('user_requests')
-                    .select('contact_name')
-                    .eq('id', currentRequestId)
+                    .from('agents') // Changed from user_requests to agents
+                    .select('full_name') // Changed from contact_name to full_name
+                    .eq('id', currentReceiverId) // Filter by agent_id
                     .single();
                 
-                if (data && data.contact_name) {
-                    currentReceiverName = data.contact_name;
+                if (data && data.full_name) {
+                    currentReceiverName = data.full_name;
                 }
             } catch (error) {
                 console.error('Error fetching receiver details:', error);
@@ -427,8 +461,8 @@
                 // Create the message object
                 const newMessage = {
                     request_id: currentRequestId,
-                    sender_id: currentUser.id, // Agent's ID
-                    receiver_id: currentReceiverId, // User's ID
+                    sender_id: currentUser.id, // {{ EDIT_START }} Use the authenticated user's ID as sender {{ EDIT_END }}
+                    receiver_id: currentReceiverId, // Receiver is the agent (from URL)
                     content: messageText,
                     created_at: new Date().toISOString()
                 };
@@ -445,9 +479,11 @@
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
                 
-                // Removed: displayMessage(data[0]);
-                // Removed: scrollToBottom();
-                // Messages will now be displayed and scrolled to via the real-time subscription
+                // Display the sent message
+                displayMessage(data[0]);
+                
+                // Scroll to bottom
+                scrollToBottom();
                 
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -474,22 +510,23 @@
                         filter: `request_id=eq.${currentRequestId}`
                     },
                     (payload) => {
-                        console.log('Realtime INSERT event received:', payload.new);
-                        console.log('  Current Agent ID (currentUser.id):', currentUser.id);
+                        // --- ADDED LOGS FOR DEBUGGING ---
+                        console.log('Realtime INSERT event received (User Side):', payload.new);
+                        console.log('  Current User ID:', currentUser.id);
                         console.log('  Payload Sender ID:', payload.new.sender_id);
                         console.log('  Payload Receiver ID:', payload.new.receiver_id);
+                        console.log('  Condition (receiver === currentUser || sender === currentUser):',
+                            payload.new.receiver_id === currentUser.id || payload.new.sender_id === currentUser.id);
+                        // --- END ADDED LOGS ---
 
-                        // This variable determines if displayMessage will style it as 'sent' or 'received'
-                        const isMessageSentByCurrentAgent = payload.new.sender_id === currentUser.id;
-                        console.log('  Is message sent by current agent (for displayMessage):', isMessageSentByCurrentAgent);
-
-                        // Display ALL messages for this request_id, as displayMessage handles sent/received styling
-                        displayMessage(payload.new);
-                        scrollToBottom();
-
-                        // Only mark as read if the current user is the receiver of this specific message
-                        if (payload.new.receiver_id === currentUser.id) {
-                            markMessagesAsRead();
+                        // Display the message if the current user is either the sender or the receiver
+                        if (payload.new.receiver_id === currentUser.id || payload.new.sender_id === currentUser.id) {
+                            displayMessage(payload.new);
+                            scrollToBottom();
+                            // Only mark as read if the current user is the receiver
+                            if (payload.new.receiver_id === currentUser.id) {
+                                markMessagesAsRead();
+                            }
                         }
                     }
                 )
@@ -502,6 +539,7 @@
                         filter: `request_id=eq.${currentRequestId}`
                     },
                     (payload) => {
+                        // Update read status if the message was sent by this user and is now read
                         if (payload.new.sender_id === currentUser.id && payload.new.is_read) {
                             updateReadStatus(payload.new.id);
                         }
@@ -521,7 +559,7 @@
                     .from('request_conversations')
                     .update({ is_read: true })
                     .eq('request_id', currentRequestId)
-                    .eq('receiver_id', currentUser.id) // Mark messages where THIS agent is the receiver
+                    .eq('receiver_id', currentUser.id)
                     .eq('is_read', false);
                 
                 if (error) throw error;
@@ -533,6 +571,9 @@
 
         // Update read status indicators in the UI
         function updateReadStatus(messageId) {
+            // This function needs to find the specific message element and update its status.
+            // For simplicity, this example just updates all sent messages.
+            // A more robust solution would involve adding data-message-id to message elements.
             const messageElements = document.querySelectorAll('.message-sent');
             messageElements.forEach(element => {
                 const statusElement = element.querySelector('.message-status');
