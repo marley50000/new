@@ -194,12 +194,26 @@
             border-radius: 5px;
             margin: 10px;
         }
+
+        /* New style for displaying request content */
+        .request-content-display {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+            padding: 5px 10px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            word-wrap: break-word;
+            max-height: 80px; /* Limit height to prevent header from growing too large */
+            overflow-y: auto; /* Add scroll if content exceeds max-height */
+        }
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div class="chat-header">
             <h2 id="chat-title">Loading chat...</h2>
+            <div id="request-content-display" class="request-content-display" style="display: none;"></div>
             <div id="typing-indicator" class="typing-indicator" style="display: none;"></div>
         </div>
         <div class="chat-messages" id="chat-messages">
@@ -241,6 +255,7 @@
         const sendButton = document.getElementById('send-button');
         const chatTitle = document.getElementById('chat-title');
         const typingIndicator = document.getElementById('typing-indicator');
+        const requestContentDisplay = document.getElementById('request-content-display'); // New DOM element
 
         // Initialize Supabase with error handling
         let _supabase;
@@ -256,6 +271,7 @@
         let currentUser = null; // This will hold { id: agent_id }
         let currentReceiverId = null; // This will hold the user's ID
         let currentReceiverName = "Receiver";
+        let currentRequestContent = "No request details found."; // Updated variable for combined post content
         let unsubscribe = null;
 
         // Helper: get user_id, request_id, receiver_id from URL (or use defaults for testing)
@@ -319,26 +335,53 @@
         // Example function to fetch receiver details
         async function fetchReceiverDetails() {
             try {
-                if (!currentReceiverId) return;
+                if (!currentReceiverId || !currentRequestId) return;
                 
-                // Fetch receiver details from your users table
+                // Fetch receiver details and request content from your user_requests table
                 const { data, error } = await _supabase
                     .from('user_requests')
-                    .select('contact_name')
+                    .select('contact_name, description, title, category') // Select multiple columns
                     .eq('id', currentRequestId)
                     .single();
                 
-                if (data && data.contact_name) {
-                    currentReceiverName = data.contact_name;
+                if (error) throw error;
+
+                if (data) {
+                    if (data.contact_name) {
+                        currentReceiverName = data.contact_name;
+                    }
+
+                    // Construct the request content string from multiple columns
+                    let contentParts = [];
+                    if (data.title && data.title.trim() !== '') {
+                        contentParts.push(`Title: ${data.title}`);
+                    }
+                    if (data.category && data.category.trim() !== '') {
+                        contentParts.push(`Category: ${data.category}`);
+                    }
+                    if (data.description && data.description.trim() !== '') {
+                        contentParts.push(`Description: ${data.description}`);
+                    }
+                    
+                    if (contentParts.length > 0) {
+                        currentRequestContent = contentParts.join(' | ');
+                    } else {
+                        currentRequestContent = "No specific request details provided.";
+                    }
                 }
             } catch (error) {
-                console.error('Error fetching receiver details:', error);
+                console.error('Error fetching receiver details or request content:', error);
+                // Optionally, set a default message if fetching fails
+                currentRequestContent = "Failed to load request details.";
             }
         }
 
         // Initialize chat UI elements
         function initializeChatUI() {
             chatTitle.textContent = `Chat with ${currentReceiverName}`;
+            // Display the request content
+            requestContentDisplay.textContent = `Request: ${currentRequestContent}`;
+            requestContentDisplay.style.display = 'block'; // Make it visible
             messageInput.disabled = false;
             sendButton.disabled = false;
             messageInput.focus();
