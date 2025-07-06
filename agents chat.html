@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp-like Chat</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         :root {
             --primary-color: #25D366;
@@ -16,6 +18,7 @@
             --gray-light: #f0f0f0;
             --gray-medium: #e5e5e5;
             --gray-dark: #888;
+            /* Removed: --user-avatar-blue: #007bff; */
         }
         
         * {
@@ -47,13 +50,15 @@
             color: var(--white);
             padding: 15px 20px;
             display: flex;
-            align-items: center;
+            flex-direction: column; /* Changed to column to stack elements */
+            align-items: flex-start; /* Align items to the start */
             justify-content: space-between;
         }
         
         .chat-header h2 {
             font-size: 18px;
             font-weight: 500;
+            margin-bottom: 5px; /* Add some space below title */
         }
         
         .chat-messages {
@@ -206,6 +211,86 @@
             word-wrap: break-word;
             max-height: 80px; /* Limit height to prevent header from growing too large */
             overflow-y: auto; /* Add scroll if content exceeds max-height */
+            width: 100%; /* Ensure it takes full width */
+        }
+
+        /* New styles for request status */
+        #request-status-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px; /* Space above status container */
+            color: var(--white);
+            font-size: 14px;
+            width: 100%; /* Ensure it takes full width */
+            justify-content: space-between; /* Space out status text and button */
+        }
+
+        .request-status-display {
+            font-weight: bold;
+            padding: 5px 10px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        .toggle-status-button {
+            background-color: var(--primary-color); /* Green for active */
+            color: var(--white);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .toggle-status-button.inactive {
+            background-color: var(--gray-dark); /* Gray for inactive */
+        }
+
+        .toggle-status-button:hover {
+            opacity: 0.8;
+        }
+
+        /* Avatar styles */
+        .message {
+            display: flex; /* Make it a flex container */
+            align-items: flex-end; /* Align items to the bottom */
+            margin-bottom: 15px;
+            max-width: 70%; /* Keep max-width on the whole message container */
+        }
+
+        .message-sent {
+            flex-direction: row-reverse; /* Avatar on the right, message body on the left */
+            margin-left: auto;
+        }
+
+        .message-received {
+            flex-direction: row; /* Avatar on the left, message body on the right */
+            margin-right: auto;
+        }
+
+        .message-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 5px; /* Space between avatar and message bubble */
+            flex-shrink: 0; /* Prevent avatar from shrinking */
+            display: flex; /* To center the icon */
+            align-items: center; /* To center the icon vertically */
+            justify-content: center; /* To center the icon horizontally */
+            font-size: 16px; /* Size of the icon itself */
+            color: var(--white); /* Icon color */
+        }
+
+        .agent-avatar-icon {
+            background-color: var(--primary-color); /* Green background for agent */
+        }
+
+        .user-avatar-icon {
+            background-color: #C0C0C0; /* Changed to a lighter gray for user circle */
+            border-radius: 50%; /* Make it a round circle */
+            color: var(--white); /* Set user icon color to white */
         }
     </style>
 </head>
@@ -215,6 +300,11 @@
             <h2 id="chat-title">Loading chat...</h2>
             <div id="request-content-display" class="request-content-display" style="display: none;"></div>
             <div id="typing-indicator" class="typing-indicator" style="display: none;"></div>
+            <!-- New elements for status -->
+            <div id="request-status-container" style="display: none;">
+                <span id="request-status-display" class="request-status-display"></span>
+                <button id="toggle-status-button" class="toggle-status-button"></button>
+            </div>
         </div>
         <div class="chat-messages" id="chat-messages">
             <div class="loading">Loading messages...</div>
@@ -234,6 +324,10 @@
         // Configuration
         const SUPABASE_URL = 'https://qzddjvloicjwshggzctt.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6ZGRqdmxvaWNqd3NoZ2d6Y3R0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk0MDk5MzMsImV4cCI6MjA2NDk4NTkzM30.mkrERrCanIkNnIlch5UJ-OOJ9az7oXs1EFZijkf7y7o';
+        
+        // Removed: Avatar URLs (placeholders)
+        // Removed: const AGENT_AVATAR_URL = 'https://via.placeholder.com/30/25D366/FFFFFF?text=A'; // Green background, white 'A' for Agent
+        // Removed: const USER_AVATAR_URL = 'https://via.placeholder.com/30/FFFFFF/333333?text=U'; // White background, dark 'U' for User
         
         // Helper function to show error messages (defined early to be available)
         function showError(message) {
@@ -256,6 +350,10 @@
         const chatTitle = document.getElementById('chat-title');
         const typingIndicator = document.getElementById('typing-indicator');
         const requestContentDisplay = document.getElementById('request-content-display'); // New DOM element
+        // New DOM elements for status
+        const requestStatusContainer = document.getElementById('request-status-container');
+        const requestStatusDisplay = document.getElementById('request-status-display');
+        const toggleStatusButton = document.getElementById('toggle-status-button');
 
         // Initialize Supabase with error handling
         let _supabase;
@@ -272,6 +370,7 @@
         let currentReceiverId = null; // This will hold the user's ID
         let currentReceiverName = "Receiver";
         let currentRequestContent = "No request details found."; // Updated variable for combined post content
+        let currentRequestStatus = "unknown"; // New variable for request status
         let unsubscribe = null;
 
         // Helper: get user_id, request_id, receiver_id from URL (or use defaults for testing)
@@ -289,13 +388,13 @@
         }
 
         let currentRequestId = getRequestIdFromURL();
-        // Removed: let currentAgentId = getAgentIdFromURL();
-        // Removed: let currentUserId = getUserIdFromURL();
 
         // Initialize chat when DOM is loaded
         document.addEventListener('DOMContentLoaded', async function() {
             try {
-                if (!_supabase) throw new Error('Supabase client not initialized.');
+                // Initialize Supabase client here, ensuring window.supabase is available
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                console.log('Supabase initialized successfully');
 
                 // Set current user (agent) and the user they are chatting with (receiver) from URL or defaults
                 const agentIdFromUrl = getAgentIdFromURL();
@@ -340,7 +439,7 @@
                 // Fetch receiver details and request content from your user_requests table
                 const { data, error } = await _supabase
                     .from('user_requests')
-                    .select('contact_name, description, title, category') // Select multiple columns
+                    .select('contact_name, description, title, category, budget, status') // Select status as well
                     .eq('id', currentRequestId)
                     .single();
                 
@@ -350,6 +449,8 @@
                     if (data.contact_name) {
                         currentReceiverName = data.contact_name;
                     }
+                    // Store the status
+                    currentRequestStatus = data.status || 'unknown'; // Default to 'unknown' if not set
 
                     // Construct the request content string from multiple columns
                     let contentParts = [];
@@ -362,6 +463,10 @@
                     if (data.description && data.description.trim() !== '') {
                         contentParts.push(`Description: ${data.description}`);
                     }
+                    // Add budget if it exists and is not null, with GH₵ symbol
+                    if (data.budget !== null && data.budget !== undefined) {
+                        contentParts.push(`Budget: GH₵${data.budget}`);
+                    }
                     
                     if (contentParts.length > 0) {
                         currentRequestContent = contentParts.join(' | ');
@@ -373,6 +478,7 @@
                 console.error('Error fetching receiver details or request content:', error);
                 // Optionally, set a default message if fetching fails
                 currentRequestContent = "Failed to load request details.";
+                currentRequestStatus = "Failed to load status.";
             }
         }
 
@@ -382,6 +488,19 @@
             // Display the request content
             requestContentDisplay.textContent = `Request: ${currentRequestContent}`;
             requestContentDisplay.style.display = 'block'; // Make it visible
+
+            // Display the request status and configure toggle button
+            requestStatusDisplay.textContent = `Status: ${currentRequestStatus.toUpperCase()}`;
+            requestStatusContainer.style.display = 'flex'; // Make it visible
+
+            if (currentRequestStatus === 'active') {
+                toggleStatusButton.textContent = 'Mark Inactive';
+                toggleStatusButton.classList.remove('inactive');
+            } else {
+                toggleStatusButton.textContent = 'Mark Active';
+                toggleStatusButton.classList.add('inactive');
+            }
+
             messageInput.disabled = false;
             sendButton.disabled = false;
             messageInput.focus();
@@ -433,11 +552,18 @@
             const messageElement = document.createElement('div');
             messageElement.className = `message ${isSent ? 'message-sent' : 'message-received'}`;
             
+            // Use Font Awesome icons for avatars
+            const avatarClass = isSent ? 'agent-avatar-icon' : 'user-avatar-icon';
+            const avatarIcon = isSent ? 'fas fa-user-tie' : 'far fa-user'; // Changed icon for user
+            
             messageElement.innerHTML = `
-                <div class="message-content">${escapeHtml(message.content)}</div>
-                <div class="message-info">
-                    <span class="message-time">${messageTime}</span>
-                    ${isSent ? `<span class="message-status">${message.is_read ? '✓✓' : '✓'}</span>` : ''}
+                <i class="${avatarIcon} message-avatar ${avatarClass}"></i>
+                <div class="message-body">
+                    <div class="message-content">${escapeHtml(message.content)}</div>
+                    <div class="message-info">
+                        <span class="message-time">${messageTime}</span>
+                        ${isSent ? `<span class="message-status">${message.is_read ? '✓✓' : '✓'}</span>` : ''}
+                    </div>
                 </div>
             `;
             
@@ -590,8 +716,43 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
+        // Toggle request status
+        async function toggleRequestStatus() {
+            if (!currentRequestId) {
+                showError('Cannot toggle status: No request ID found.');
+                return;
+            }
+
+            const newStatus = currentRequestStatus === 'active' ? 'inactive' : 'active';
+            toggleStatusButton.disabled = true; // Disable button during update
+
+            try {
+                const { data, error } = await _supabase
+                    .from('user_requests')
+                    .update({ status: newStatus })
+                    .eq('id', currentRequestId)
+                    .select(); // Select the updated row to confirm
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    currentRequestStatus = data[0].status; // Update local state with confirmed new status
+                    initializeChatUI(); // Re-initialize UI to reflect new status
+                    console.log(`Request status updated to: ${currentRequestStatus}`);
+                } else {
+                    showError('Failed to update status: No data returned.');
+                }
+            } catch (error) {
+                console.error('Error toggling request status:', error);
+                showError(`Failed to toggle status: ${error.message}`);
+            } finally {
+                toggleStatusButton.disabled = false; // Re-enable button
+            }
+        }
+
         // Event listeners
         sendButton.addEventListener('click', sendMessage);
+        toggleStatusButton.addEventListener('click', toggleRequestStatus); // New event listener
         
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
