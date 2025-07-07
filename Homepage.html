@@ -17,7 +17,18 @@
     .toggle-post-status:checked + .block + .dot {
         transform: translateX(100%);
     }
-  </style>
+    /* New style for unread message badge */
+    .unread-badge {
+        background-color: #FF0000; /* Red background */
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 0.7em;
+        min-width: 18px; /* Ensure it's round even for single digits */
+        text-align: center;
+        display: inline-block;
+    }
+</style>
 </head>
 
 <body class="bg-[#ffff] min-h-screen p-4">
@@ -45,12 +56,12 @@
         <svg class="-ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
-        Post a Request
-      </a>
+ 
       <!-- Button for My Requests -->
-      <a id="myRequestsToggle" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-4">
+      <a id="myRequestsToggle" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 mt-4 relative">
         <i class="fas fa-history mr-3 h-5 w-5"></i>
         My Posted Requests
+        <span id="myRequestsNotificationBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center hidden">0</span>
       </a>
       <!-- Button for Open Requests from Other Users -->
       <a id="viewOpenRequestsButton" href="#" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mt-4 relative">
@@ -248,7 +259,58 @@
           }
         })
         .subscribe();
-
+    
+      // NEW: Supabase Realtime subscription for request_conversations
+      supabase
+        .channel('public:request_conversations')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'request_conversations' }, async payload => {
+          console.log('Realtime change received for request_conversations:', payload);
+          if (currentUser && payload.new) {
+              const requestId = payload.new.request_id;
+              // Fetch the request details to check its user_id
+              const { data: requestData, error: requestError } = await supabase
+                  .from('user_requests')
+                  .select('user_id')
+                  .eq('id', requestId)
+                  .single();
+    
+              if (requestError) {
+                  console.error("Error fetching request for conversation notification:", requestError);
+                  return;
+              }
+    
+              if (requestData && requestData.user_id === currentUser.id && payload.new.receiver_id === currentUser.id) {
+                  // This is a new message for one of the current user's requests AND the user is the receiver
+                  console.log('New unread message detected for current user');
+                  updateMyRequestsNotificationBadge(); // Call the new function to update the badge
+              }
+          }
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'request_conversations' }, async payload => {
+          console.log('Realtime UPDATE change received for request_conversations:', payload);
+          if (currentUser && payload.new) {
+              const requestId = payload.new.request_id;
+              // Fetch the request details to check its user_id
+              const { data: requestData, error: requestError } = await supabase
+                  .from('user_requests')
+                  .select('user_id')
+                  .eq('id', requestId)
+                  .single();
+    
+              if (requestError) {
+                  console.error("Error fetching request for conversation notification:", requestError);
+                  return;
+              }
+    
+              if (requestData && requestData.user_id === currentUser.id) {
+                  // This is an update to a message for one of the current user's requests
+                  console.log('Message update detected for current user');
+                  updateMyRequestsNotificationBadge(); // Update the badge when messages are marked as read
+              }
+          }
+        })
+        .subscribe();
+    
       // Get references to elements
       const postRequestToggle = document.getElementById('postRequestToggle');
       const postRequestFormContainer = document.getElementById('postRequestFormContainer');
@@ -272,16 +334,19 @@
       const viewOpenRequestsButton = document.getElementById('viewOpenRequestsButton');
       const allOpenRequestsSection = document.getElementById('all-open-requests-section');
       const openRequestsCountBadge = document.getElementById('openRequestsCountBadge');
-
+      const myRequestsNotificationBadge = document.getElementById('myRequestsNotificationBadge'); // NEW: Get reference to the new badge
+      const closeMyRequestsModalBtn = document.getElementById('closeMyRequestsModal');
+    
       let currentUser = null;
       let allUserRequests = new Map();
       let allOpenRequestsMap = new Map();
       let isMyRequestsToggleProcessing = false;
+      // Removed: let newResponsesCount = 0; // NEW: Initialize new responses counter
       let currentChatRequestId = null;
       let currentChatRecipientId = null;
       let currentChatRecipientName = null;
       let isChatMinimized = false;
-
+    
       // Add event listener for the Post a Request button
       if (postRequestToggle && postRequestFormContainer) {
           postRequestToggle.addEventListener('click', (event) => {
@@ -302,30 +367,32 @@
               }
           });
       }
-
+    
       // Add event listener for the My Requests toggle button
       if (myRequestsToggle && myRequestsModal) {
           myRequestsToggle.addEventListener('click', async (event) => {
               event.preventDefault();
-
+    
               if (isMyRequestsToggleProcessing) {
                   return;
               }
-
+    
               isMyRequestsToggleProcessing = true;
-              
+    
               const isCurrentlyHidden = myRequestsModal.classList.contains('hidden');
-
+    
               if (!postRequestFormContainer.classList.contains('hidden')) {
                   postRequestFormContainer.classList.add('hidden');
               }
               if (!allOpenRequestsSection.classList.contains('hidden')) {
                   allOpenRequestsSection.classList.add('hidden');
               }
-
+    
               if (isCurrentlyHidden) {
                   myRequestsModal.classList.remove('hidden');
-
+                  // NEW: Update notification badge when modal is opened to ensure accuracy
+                  await updateMyRequestsNotificationBadge();
+    
                   if (currentUser) {
                       const originalButtonContent = myRequestsToggle.innerHTML;
                       myRequestsToggle.innerHTML = `
@@ -335,7 +402,7 @@
                           </div>
                       `;
                       myRequestsToggle.style.pointerEvents = 'none';
-
+    
                       try {
                           await loadMyRequests(currentUser.id);
                       } finally {
@@ -349,11 +416,11 @@
               } else {
                   myRequestsModal.classList.add('hidden');
               }
-
+    
               isMyRequestsToggleProcessing = false;
           });
       }
-
+    
       // Add event listener for the "View Open Requests" button
       if (viewOpenRequestsButton && allOpenRequestsSection) {
           viewOpenRequestsButton.addEventListener('click', (event) => {
@@ -368,23 +435,23 @@
               }
           });
       }
-
+    
       // Form submission
       const requestForm = document.getElementById('requestForm');
       const submitBtn = document.getElementById('submitBtn');
       const successMessage = document.getElementById('successMessage');
       const errorMessage = document.getElementById('errorMessage');
-
+    
       if (requestForm) {
           requestForm.addEventListener('submit', async function(event) {
               event.preventDefault();
-
+    
               if (!currentUser) {
                   errorMessage.textContent = "Please log in to post a request.";
                   errorMessage.classList.remove('hidden');
                   return;
               }
-
+    
               submitBtn.innerHTML = `
                   <div class="flex items-center gap-2">
                       <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -394,7 +461,7 @@
               submitBtn.disabled = true;
               successMessage.classList.add('hidden');
               errorMessage.classList.add('hidden');
-
+    
               const formData = new FormData(requestForm);
               const requestData = {
                   title: formData.get('title'),
@@ -409,16 +476,16 @@
                   user_id: currentUser.id,
                   post_status: true // Set post_status to true by default
               };
-
+    
               try {
                   const { data, error } = await supabase
                       .from('user_requests')
                       .insert([requestData]);
-
+    
                   if (error) {
                       throw new Error(error.message);
                   }
-
+    
                   successMessage.classList.remove('hidden');
                   requestForm.reset();
                   postRequestFormContainer.classList.add('hidden');
@@ -435,7 +502,7 @@
               }
           });
       }
-
+    
       async function checkUserAndDisplayAuth() {
           const { data: { user }, error } = await supabase.auth.getUser();
       
@@ -444,6 +511,7 @@
               userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
               myRequestsModal.classList.add('hidden');
               currentUser = null;
+              updateMyRequestsNotificationBadge(); // Call here to hide badge if logged out
               return;
           }
       
@@ -460,10 +528,12 @@
                       window.location.reload();
                   }
               });
+              updateMyRequestsNotificationBadge(); // Call here to update badge on login
           } else {
               userAuthSection.innerHTML = `<a href="index.html" class="text-blue-600 hover:underline text-sm">Login / Sign Up</a>`;
               myRequestsModal.classList.add('hidden');
               currentUser = null;
+              updateMyRequestsNotificationBadge(); // Call here to hide badge if logged out
           }
       }
 
@@ -497,16 +567,90 @@
           }
       });
 
-      const closeMyRequestsModalBtn = document.getElementById('closeMyRequestsModal');
       closeMyRequestsModalBtn.addEventListener('click', () => {
           myRequestsModal.classList.add('hidden');
+          updateMyRequestsNotificationBadge(); // Re-check unread count after closing modal
       });
 
       myRequestsModal.addEventListener('click', (event) => {
           if (event.target === myRequestsModal) {
               myRequestsModal.classList.add('hidden');
+              updateMyRequestsNotificationBadge(); // Re-check unread count after closing modal
           }
       });
+
+      // NEW: Function to get the total unread messages for the current user's requests
+      async function getTotalUnreadMessagesForUser(userId) {
+          try {
+              console.log('Getting unread messages for user:', userId);
+              
+              // First, get all request IDs posted by this user
+              const { data: userRequests, error: reqError } = await supabase
+                  .from('user_requests')
+                  .select('id')
+                  .eq('user_id', userId);
+    
+              if (reqError) {
+                  console.error('Error fetching user request IDs:', reqError);
+                  return 0;
+              }
+    
+              if (!userRequests || userRequests.length === 0) {
+                  console.log('No requests found for user');
+                  return 0;
+              }
+    
+              const requestIds = userRequests.map(req => req.id);
+              console.log('Request IDs for user:', requestIds);
+    
+              // Then, count unread messages for these requests where the user is the receiver
+              const { count, error } = await supabase
+                  .from('request_conversations')
+                  .select('*', { count: 'exact', head: true })
+                  .in('request_id', requestIds)
+                  .eq('receiver_id', userId)
+                  .eq('is_read', false);
+    
+              if (error) {
+                  console.error('Error fetching total unread message count:', error);
+                  return 0;
+              }
+              
+              console.log('Total unread messages found:', count);
+              return count || 0;
+          } catch (e) {
+              console.error('Exception fetching total unread message count:', e);
+              return 0;
+          }
+      }
+
+      // NEW: Function to update the main "My Posted Requests" notification badge
+      async function updateMyRequestsNotificationBadge() {
+          if (!currentUser) {
+              myRequestsNotificationBadge.classList.add('hidden');
+              return;
+          }
+          
+          try {
+              const unreadCount = await getTotalUnreadMessagesForUser(currentUser.id);
+              console.log('Updating notification badge. Unread count:', unreadCount);
+              
+              if (unreadCount > 0) {
+                  myRequestsNotificationBadge.textContent = unreadCount;
+                  myRequestsNotificationBadge.classList.remove('hidden');
+                  console.log('Notification badge shown with count:', unreadCount);
+              } else {
+                  myRequestsNotificationBadge.classList.add('hidden');
+                  console.log('Notification badge hidden - no unread messages');
+              }
+          } catch (error) {
+              console.error('Error updating notification badge:', error);
+              // Hide badge on error to avoid confusion
+              myRequestsNotificationBadge.classList.add('hidden');
+          }
+      }
+
+
 
       async function loadMyRequests(userId) {
           console.log('Attempting to load requests for user ID:', userId);
@@ -544,12 +688,15 @@
               let agentNameForChat = 'Agent'; // Default name for the agent
       
               // Try to find an agent ID from existing conversations for this request
-              // We look for any message associated with this request_id
+              // Look for the most recent message where an agent sent a message to the current user
               const { data: conversationMessages, error: conversationError } = await supabase
                   .from('request_conversations')
-                  .select('sender_id, receiver_id')
+                  .select('sender_id, receiver_id, created_at')
                   .eq('request_id', request.id)
-                  .limit(1); // Just need one message to identify an agent
+                  .eq('receiver_id', currentUser.id) // Messages sent TO the current user
+                  .neq('sender_id', currentUser.id) // Messages NOT sent BY the current user (i.e., from agents)
+                  .order('created_at', { ascending: false }) // Get the most recent first
+                  .limit(1);
       
               if (conversationError) {
                   console.error("Error fetching conversation for request:", conversationError);
@@ -557,12 +704,31 @@
       
               if (conversationMessages && conversationMessages.length > 0) {
                   const message = conversationMessages[0];
-                  // Determine which ID is the agent's ID (the one that is not the current user's ID)
-                  if (message.sender_id !== currentUser.id) {
-                      agentIdForChat = message.sender_id;
-                  } else if (message.receiver_id !== currentUser.id) {
-                      agentIdForChat = message.receiver_id;
+                  // The sender_id is the agent's ID (since we filtered for messages TO the user from others)
+                  agentIdForChat = message.sender_id;
+                  console.log(`Found agent ID ${agentIdForChat} for request ${request.id} from message:`, message);
+              } else {
+                  console.log(`No agent messages found for request ${request.id}`);
+                  
+                  // Fallback: Look for ANY messages in this conversation to find an agent
+                  const { data: fallbackMessages, error: fallbackError } = await supabase
+                      .from('request_conversations')
+                      .select('sender_id, receiver_id')
+                      .eq('request_id', request.id)
+                      .limit(1);
+                  
+                  if (!fallbackError && fallbackMessages && fallbackMessages.length > 0) {
+                      const fallbackMessage = fallbackMessages[0];
+                      // Find the agent ID (the one that's not the current user)
+                      if (fallbackMessage.sender_id !== currentUser.id) {
+                          agentIdForChat = fallbackMessage.sender_id;
+                          console.log(`Found agent ID ${agentIdForChat} for request ${request.id} from fallback message:`, fallbackMessage);
+                      } else if (fallbackMessage.receiver_id !== currentUser.id) {
+                          agentIdForChat = fallbackMessage.receiver_id;
+                          console.log(`Found agent ID ${agentIdForChat} for request ${request.id} from fallback message:`, fallbackMessage);
+                      }
                   }
+              }
       
                   if (agentIdForChat) {
                       // Fetch agent's name from the 'agents' table
@@ -577,7 +743,6 @@
                       if (agentData && agentData.length > 0 && agentData[0].full_name) {
                           agentNameForChat = agentData[0].full_name;
                       }
-                  }
               }
       
               if (agentIdForChat) {
@@ -659,8 +824,10 @@
                   const agentName = event.target.dataset.agentName;
                   
                   if (requestId && userId && agentId) {
-                      // Open the user_chat.html page in a new tab with relevant parameters
-                      const chatUrl = `user_chat.html?request_id=${requestId}&user_id=${userId}&agent_id=${agentId}&agent_name=${encodeURIComponent(agentName)}`;
+                      // Corrected: Direct user to 'agents chat.html'
+                      // ADDED: role=user parameter to indicate this is the user's view
+                      const chatUrl = `agents chat.html?request_id=${requestId}&user_id=${userId}&agent_id=${agentId}&agent_name=${encodeURIComponent(agentName)}&role=user`;
+                      console.log("Opening chat with URL:", chatUrl);
                       window.open(chatUrl, '_blank');
                   } else {
                       alert("Could not open chat. Missing request, user, or agent ID.");
@@ -889,6 +1056,20 @@
           loadAllOpenRequests();
           loadFeaturedAgents();
           loadRandomAgents();
+          
+          // Set up periodic refresh of notification badge (every 30 seconds)
+          if (currentUser) {
+              setInterval(async () => {
+                  await updateMyRequestsNotificationBadge();
+              }, 30000); // 30 seconds
+          }
+      });
+      
+      // Refresh notification badge when user returns to the page (focus event)
+      window.addEventListener('focus', async () => {
+          if (currentUser) {
+              await updateMyRequestsNotificationBadge();
+          }
       });
 
       // New function to toggle post status in Supabase

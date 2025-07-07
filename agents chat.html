@@ -356,14 +356,14 @@
         const toggleStatusButton = document.getElementById('toggle-status-button');
 
         // Initialize Supabase with error handling
-        let _supabase;
-        try {
-            _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            console.log('Supabase initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize Supabase:', error);
-            showError('Error connecting to chat service. Please refresh the page.');
-        }
+        let _supabase; // Declare _supabase here, but initialize it inside DOMContentLoaded
+        // Removed: try {
+        // Removed:     _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Removed:     console.log('Supabase initialized successfully');
+        // Removed: } catch (error) {
+        // Removed:     console.error('Failed to initialize Supabase:', error);
+        // Removed:     showError('Error connecting to chat service. Please refresh the page.');
+        // Removed: }
         
         // Chat state
         let currentUser = null; // This will hold { id: agent_id }
@@ -386,8 +386,15 @@
             const params = new URLSearchParams(window.location.search);
             return params.get('user_id'); // This is the ID of the user the agent is chatting with
         }
+        // NEW: Function to get the role from the URL
+        function getRoleFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('role'); // 'user' or null (default to agent)
+        }
 
         let currentRequestId = getRequestIdFromURL();
+        // NEW: Get the role
+        let currentRole = getRoleFromURL(); // 'user' or null
 
         // Initialize chat when DOM is loaded
         document.addEventListener('DOMContentLoaded', async function() {
@@ -395,22 +402,34 @@
                 // Initialize Supabase client here, ensuring window.supabase is available
                 _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
                 console.log('Supabase initialized successfully');
+                
 
-                // Set current user (agent) and the user they are chatting with (receiver) from URL or defaults
+
+                // Set current user and receiver based on role
                 const agentIdFromUrl = getAgentIdFromURL();
                 const userIdFromUrl = getUserIdFromURL();
 
-                currentUser = { id: agentIdFromUrl || 'agent-123' }; // The agent is the current user
-                currentReceiverId = userIdFromUrl || 'user-456'; // The user is the receiver for agent's messages
+                if (currentRole === 'user') {
+                    // If the role is 'user', the current user is the user, and the receiver is the agent
+                    currentUser = { id: userIdFromUrl || 'user-456' };
+                    currentReceiverId = agentIdFromUrl || 'agent-123';
+                    currentReceiverName = "Agent"; // Default name, will be fetched
+                } else {
+                    // Default to agent role if no role or role is not 'user'
+                    currentUser = { id: agentIdFromUrl || 'agent-123' };
+                    currentReceiverId = userIdFromUrl || 'user-456';
+                    currentReceiverName = "User"; // Default name, will be fetched
+                }
 
                 // Ensure currentRequestId is set
                 currentRequestId = currentRequestId || 'default-request-id';
 
                 // --- ADDED LOGS FOR DEBUGGING ---
                 console.log('Chat Initialized:');
-                console.log('  currentUser.id (Agent ID):', currentUser.id); // This is the ID of the agent using this page
+                console.log('  currentRole:', currentRole);
+                console.log('  currentUser.id:', currentUser.id); // This is the ID of the person using this page
                 console.log('  currentRequestId:', currentRequestId);
-                console.log('  currentReceiverId (User ID):', currentReceiverId); // This is the ID of the user the agent is chatting with
+                console.log('  currentReceiverId:', currentReceiverId); // This is the ID of the person they are chatting with
                 // --- END ADDED LOGS ---
 
                 // Fetch receiver details (optional)
@@ -436,69 +455,57 @@
             try {
                 if (!currentReceiverId || !currentRequestId) return;
                 
-                // Fetch receiver details and request content from your user_requests table
-                const { data, error } = await _supabase
+                // Fetch request details to get contact_name and request content
+                const { data: requestData, error: requestError } = await _supabase
                     .from('user_requests')
-                    .select('contact_name, description, title, category, budget, status') // Select status as well
+                    .select('contact_name, description, title, category, budget, status')
                     .eq('id', currentRequestId)
                     .single();
                 
-                if (error) throw error;
+                if (requestError) {
+                    console.warn('Could not fetch request details:', requestError.message);
+                } else if (requestData) {
+                    currentRequestContent = `Request: ${requestData.title} (${requestData.category}) - ${requestData.description}`;
+                    currentRequestStatus = requestData.status;
 
-                if (data) {
-                    if (data.contact_name) {
-                        currentReceiverName = data.contact_name;
-                    }
-                    // Store the status
-                    currentRequestStatus = data.status || 'unknown'; // Default to 'unknown' if not set
-
-                    // Construct the request content string from multiple columns
-                    let contentParts = [];
-                    if (data.title && data.title.trim() !== '') {
-                        contentParts.push(`Title: ${data.title}`);
-                    }
-                    if (data.category && data.category.trim() !== '') {
-                        contentParts.push(`Category: ${data.category}`);
-                    }
-                    if (data.description && data.description.trim() !== '') {
-                        contentParts.push(`Description: ${data.description}`);
-                    }
-                    // Add budget if it exists and is not null, with GH₵ symbol
-                    if (data.budget !== null && data.budget !== undefined) {
-                        contentParts.push(`Budget: GH₵${data.budget}`);
-                    }
-                    
-                    if (contentParts.length > 0) {
-                        currentRequestContent = contentParts.join(' | ');
+                    // Determine receiver name based on role
+                    if (currentRole === 'user') {
+                        // If user is viewing, receiver is the agent. Fetch agent's name.
+                        const { data: agentData, error: agentError } = await _supabase
+                            .from('agents')
+                            .select('full_name')
+                            .eq('id', currentReceiverId)
+                            .single();
+                        if (agentError) {
+                            console.warn('Could not fetch agent details:', agentError.message);
+                        } else if (agentData && agentData.full_name) {
+                            currentReceiverName = agentData.full_name;
+                        }
                     } else {
-                        currentRequestContent = "No specific request details provided.";
+                        // If agent is viewing, receiver is the user. Use contact_name from request.
+                        if (requestData.contact_name) {
+                            currentReceiverName = requestData.contact_name;
+                        }
                     }
                 }
             } catch (error) {
-                console.error('Error fetching receiver details or request content:', error);
-                // Optionally, set a default message if fetching fails
-                currentRequestContent = "Failed to load request details.";
-                currentRequestStatus = "Failed to load status.";
+                console.error('Error fetching receiver details:', error);
             }
         }
 
         // Initialize chat UI elements
         function initializeChatUI() {
             chatTitle.textContent = `Chat with ${currentReceiverName}`;
-            // Display the request content
-            requestContentDisplay.textContent = `Request: ${currentRequestContent}`;
-            requestContentDisplay.style.display = 'block'; // Make it visible
+            requestContentDisplay.textContent = currentRequestContent;
+            requestContentDisplay.style.display = 'block'; // Always show request content for context
 
-            // Display the request status and configure toggle button
-            requestStatusDisplay.textContent = `Status: ${currentRequestStatus.toUpperCase()}`;
-            requestStatusContainer.style.display = 'flex'; // Make it visible
-
-            if (currentRequestStatus === 'active') {
-                toggleStatusButton.textContent = 'Mark Inactive';
-                toggleStatusButton.classList.remove('inactive');
+            // Show/hide status toggle based on role
+            if (currentRole === 'user') {
+                requestStatusContainer.style.display = 'none'; // Users don't toggle status
             } else {
-                toggleStatusButton.textContent = 'Mark Active';
-                toggleStatusButton.classList.add('inactive');
+                requestStatusContainer.style.display = 'flex'; // Agents can toggle status
+                updateRequestStatusDisplay(currentRequestStatus); // Set initial status display
+                toggleStatusButton.onclick = toggleRequestStatus; // Attach event listener
             }
 
             messageInput.disabled = false;
@@ -546,7 +553,11 @@
 
         // Display a message in the chat
         function displayMessage(message) {
+            console.log('Displaying message:', message);
+            console.log('  message.sender_id:', message.sender_id);
+            console.log('  currentUser.id (Agent ID):', currentUser.id);
             const isSent = message.sender_id === currentUser.id;
+            console.log('  isSent (should be true for agent, false for user):', isSent);
             const messageTime = formatMessageTime(message.created_at);
             
             const messageElement = document.createElement('div');
@@ -686,14 +697,23 @@
         // Mark received messages as read
         async function markMessagesAsRead() {
             try {
-                const { error } = await _supabase
+                console.log('Marking messages as read for request:', currentRequestId, 'receiver:', currentUser.id);
+                
+                const { data, error } = await _supabase
                     .from('request_conversations')
                     .update({ is_read: true })
                     .eq('request_id', currentRequestId)
-                    .eq('receiver_id', currentUser.id) // Mark messages where THIS agent is the receiver
-                    .eq('is_read', false);
+                    .eq('receiver_id', currentUser.id) // Mark messages where THIS user is the receiver
+                    .eq('is_read', false)
+                    .select();
                 
                 if (error) throw error;
+                
+                if (data && data.length > 0) {
+                    console.log('Marked', data.length, 'messages as read');
+                } else {
+                    console.log('No messages to mark as read');
+                }
                 
             } catch (error) {
                 console.error('Error marking messages as read:', error);
@@ -714,6 +734,18 @@
         // Scroll to the bottom of the chat
         function scrollToBottom() {
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // NEW: Function to update the request status display
+        function updateRequestStatusDisplay(status) {
+            requestStatusDisplay.textContent = `Status: ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+            if (status === 'active') {
+                toggleStatusButton.textContent = 'Mark Inactive';
+                toggleStatusButton.classList.remove('inactive');
+            } else {
+                toggleStatusButton.textContent = 'Mark Active';
+                toggleStatusButton.classList.add('inactive');
+            }
         }
 
         // Toggle request status
