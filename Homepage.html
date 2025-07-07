@@ -10,6 +10,13 @@
     body { font-family: 'Inter', sans-serif; }
     .fade-in { opacity: 0; transform: translateY(20px); animation: fadeInUp 1s ease-out forwards; }
     @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    /* New CSS for the toggle switch */
+    .toggle-post-status:checked + .block {
+        background-color: #22C55E; /* green-500 */
+    }
+    .toggle-post-status:checked + .block + .dot {
+        transform: translateX(100%);
+    }
   </style>
 </head>
 
@@ -235,6 +242,10 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'user_requests' }, payload => {
           console.log('Realtime change received for user_requests:', payload);
           loadAllOpenRequests();
+          // If the change is for the current user's request, also reload their requests
+          if (currentUser && payload.new && payload.new.user_id === currentUser.id) {
+              loadMyRequests(currentUser.id);
+          }
         })
         .subscribe();
 
@@ -395,7 +406,8 @@
                   contact_email: formData.get('contactEmail'),
                   contact_phone: formData.get('contactPhone'),
                   status: 'open',
-                  user_id: currentUser.id
+                  user_id: currentUser.id,
+                  post_status: true // Set post_status to true by default
               };
 
               try {
@@ -502,35 +514,35 @@
           myRequestsLoading.classList.remove('hidden');
           myRequestsEmpty.classList.add('hidden');
           allUserRequests.clear();
-
+      
           const { data, error } = await supabase
               .from('user_requests')
               .select('*')
               .eq('user_id', userId)
               .order('created_at', { ascending: false });
-
+      
           myRequestsLoading.classList.add('hidden');
-
+      
           if (error) {
               console.error("Error loading user requests:", error.message);
               myRequestsContainer.innerHTML = `<p class="text-center text-red-500">Failed to load your requests.</p>`;
               return;
           }
-
+      
           if (data.length === 0) {
               myRequestsEmpty.classList.remove('hidden');
               return;
           }
-
+      
           // Use a temporary array to store HTML strings to avoid repeated DOM manipulation
           // and use Promise.all to wait for all async operations within the loop
           const requestHtmlPromises = data.map(async request => {
               allUserRequests.set(request.id, request);
-
+      
               let chatButtonHtml = '';
               let agentIdForChat = null;
               let agentNameForChat = 'Agent'; // Default name for the agent
-
+      
               // Try to find an agent ID from existing conversations for this request
               // We look for any message associated with this request_id
               const { data: conversationMessages, error: conversationError } = await supabase
@@ -538,11 +550,11 @@
                   .select('sender_id, receiver_id')
                   .eq('request_id', request.id)
                   .limit(1); // Just need one message to identify an agent
-
+      
               if (conversationError) {
                   console.error("Error fetching conversation for request:", conversationError);
               }
-
+      
               if (conversationMessages && conversationMessages.length > 0) {
                   const message = conversationMessages[0];
                   // Determine which ID is the agent's ID (the one that is not the current user's ID)
@@ -551,23 +563,23 @@
                   } else if (message.receiver_id !== currentUser.id) {
                       agentIdForChat = message.receiver_id;
                   }
-
+      
                   if (agentIdForChat) {
                       // Fetch agent's name from the 'agents' table
                       const { data: agentData, error: agentError } = await supabase
                           .from('agents')
                           .select('full_name')
-                          .eq('id', agentIdForChat)
-                          .single();
+                          .eq('id', agentIdForChat); // Removed .single()
                       if (agentError) {
                           console.error("Error fetching agent details:", agentError);
                       }
-                      if (agentData && agentData.full_name) {
-                          agentNameForChat = agentData.full_name;
+                      // Check if data exists and has elements before accessing
+                      if (agentData && agentData.length > 0 && agentData[0].full_name) {
+                          agentNameForChat = agentData[0].full_name;
                       }
                   }
               }
-
+      
               if (agentIdForChat) {
                   // If an agent ID is found, create the "Chat with Agent" button
                   chatButtonHtml = `
@@ -587,7 +599,7 @@
                       </button>
                   `;
               }
-
+      
               return `
                   <article class="bg-[#f7f9fc] rounded-xl p-4 shadow-sm flex flex-col">
                       <h3 class="font-semibold text-lg text-gray-800">${request.title}</h3>
@@ -601,17 +613,32 @@
                           <span>Status: <span class="font-medium ${request.status === 'open' ? 'text-green-600' : 'text-red-600'}">${request.status}</span></span>
                           <span>Posted: ${new Date(request.created_at).toLocaleString()}</span>
                       </div>
+                      
+                      <!-- Post Status Toggle -->
+                      <div class="flex items-center mt-4">
+                          <label for="toggle-${request.id}" class="flex items-center cursor-pointer">
+                              <div class="relative">
+                                  <input type="checkbox" id="toggle-${request.id}" class="sr-only toggle-post-status" data-request-id="${request.id}" ${request.post_status ? 'checked' : ''}>
+                                  <div class="block bg-gray-600 w-10 h-6 rounded-full"></div>
+                                  <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                              </div>
+                              <div class="ml-3 text-gray-700 font-medium">
+                                  Post Status: <span class="status-text">${request.post_status ? 'On' : 'Off'}</span>
+                              </div>
+                          </label>
+                      </div>
+      
                       <button class="mt-4 bg-blue-600 hover:bg-blue-700 text-white rounded-md py-2 px-4 text-sm view-details-btn" data-request-id="${request.id}">View Details</button>
                       ${chatButtonHtml}
                   </article>
               `;
           });
-
+      
           // Wait for all HTML strings to be generated before updating the DOM
           const requestHtmls = await Promise.all(requestHtmlPromises);
           myRequestsContainer.innerHTML = requestHtmls.join('');
-
-
+      
+      
           // Attach event listeners to the "View Details" buttons
           document.querySelectorAll('.view-details-btn').forEach(button => {
               button.addEventListener('click', (event) => {
@@ -622,7 +649,7 @@
                   }
               });
           });
-
+      
           // Attach event listeners to the new "Chat with Agent" buttons
           document.querySelectorAll('.chat-with-agent-btn').forEach(button => {
               button.addEventListener('click', (event) => {
@@ -637,6 +664,32 @@
                       window.open(chatUrl, '_blank');
                   } else {
                       alert("Could not open chat. Missing request, user, or agent ID.");
+                  }
+              });
+          });
+      
+          // Attach event listeners to the new "Post Status" toggles
+          document.querySelectorAll('.toggle-post-status').forEach(toggle => {
+              toggle.addEventListener('change', async (event) => {
+                  const requestId = event.target.dataset.requestId;
+                  const newStatus = event.target.checked;
+                  const statusTextSpan = event.target.closest('label').querySelector('.status-text');
+                  
+                  if (statusTextSpan) {
+                      statusTextSpan.textContent = newStatus ? 'On' : 'Off';
+                  }
+      
+                  try {
+                      await togglePostStatus(requestId, newStatus);
+                      // Removed the alert for successful status update
+                  } catch (error) {
+                      console.error("Error toggling post status:", error);
+                      alert("Failed to update post status. Please try again.");
+                      // Revert the toggle state if update fails
+                      event.target.checked = !newStatus;
+                      if (statusTextSpan) {
+                          statusTextSpan.textContent = !newStatus ? 'On' : 'Off';
+                      }
                   }
               });
           });
@@ -768,6 +821,7 @@
               .from('user_requests')
               .select('*')
               .eq('status', 'open')
+              .eq('post_status', true) // Only fetch requests where post_status is true
               .order('created_at', { ascending: false });
 
           allRequestsLoading.classList.add('hidden');
@@ -836,6 +890,22 @@
           loadFeaturedAgents();
           loadRandomAgents();
       });
+
+      // New function to toggle post status in Supabase
+      async function togglePostStatus(requestId, newStatus) {
+          console.log(`Attempting to update post_status for request ID: ${requestId} to ${newStatus}`);
+          const { data, error } = await supabase
+              .from('user_requests')
+              .update({ post_status: newStatus })
+              .eq('id', requestId);
+
+          if (error) {
+              console.error("Supabase update error:", error); // Log the full error object from Supabase
+              throw new Error(error.message);
+          }
+          console.log("Supabase update successful:", data); // Log the data returned on success
+          return data;
+      }
     });
   </script>
 </body>
