@@ -15,22 +15,26 @@ detector = FlashTagDetector()
 
 @app.route('/')
 def index():
-    # Try common entry points
-    for filename in ['index.html', 'auth.html', 'Homepage.html']:
-        if os.path.exists(os.path.join(base_dir, filename)):
-            print(f"Serving {filename} from root")
+    # Priority for serving the main page
+    entry_points = ['index.html', 'auth.html', 'Homepage.html']
+    for filename in entry_points:
+        full_path = os.path.join(base_dir, filename)
+        if os.path.exists(full_path):
             return send_from_directory(base_dir, filename)
 
-    # Fallback to static
-    if os.path.exists(os.path.join(base_dir, 'static', 'auth.html')):
-        print("Serving auth.html from static")
-        return send_from_directory(os.path.join(base_dir, 'static'), 'auth.html')
-
-    return "No entry point (index.html, auth.html, etc.) found in root or static/ folder.", 404
+    return "No entry point (index.html, auth.html, etc.) found in the root directory.", 404
 
 @app.route('/flashtag')
 def flashtag_demo():
     return send_from_directory(os.path.join(base_dir, 'static'), 'flashtag_demo.html')
+
+@app.route('/favicon.ico')
+def favicon():
+    # Serve from static or return 204 No Content to avoid 404 errors in console
+    favicon_path = os.path.join(base_dir, 'static', 'favicon.ico')
+    if os.path.exists(favicon_path):
+        return send_from_directory(os.path.join(base_dir, 'static'), 'favicon.ico')
+    return '', 204
 
 @app.route('/detect_flashtag', methods=['POST'])
 def detect_flashtag():
@@ -54,19 +58,22 @@ def detect_flashtag():
 
 @app.route('/<path:filename>')
 def serve_file(filename):
-    # Try root first
-    if os.path.exists(os.path.join(base_dir, filename)):
-        # Basic security: don't serve .py files or hidden files
-        if filename.endswith('.py') or filename.startswith('.'):
+    # Try root directory
+    root_path = os.path.join(base_dir, filename)
+    if os.path.exists(root_path) and os.path.isfile(root_path):
+        # Security: Do not serve .py files, .db files, or hidden files
+        if filename.endswith(('.py', '.pyc', '.db', '.git')) or filename.startswith('.'):
             return abort(403)
         return send_from_directory(base_dir, filename)
 
-    # Try static
-    if os.path.exists(os.path.join(base_dir, 'static', filename)):
+    # Try static directory
+    static_path = os.path.join(base_dir, 'static', filename)
+    if os.path.exists(static_path) and os.path.isfile(static_path):
         return send_from_directory(os.path.join(base_dir, 'static'), filename)
 
     return abort(404)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # Using threaded=True to handle multiple requests (like favicon + html) smoothly
+    app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
