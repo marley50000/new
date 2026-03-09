@@ -1,27 +1,37 @@
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, abort
 import os
 import cv2
 import numpy as np
+import sys
+
+# Ensure the flash_tag directory is in the path for imports
+base_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(base_dir)
+
 from flash_tag.detector import FlashTagDetector
 
 app = Flask(__name__, static_folder='static')
 detector = FlashTagDetector()
 
-# Serve the main page
 @app.route('/')
 def index():
-    if os.path.exists('index.html'):
-        return send_from_directory('.', 'index.html')
-    elif os.path.exists('auth.html'):
-        return send_from_directory('.', 'auth.html')
-    return send_from_directory('static', 'auth.html')
+    # Try common entry points
+    for filename in ['index.html', 'auth.html', 'Homepage.html']:
+        if os.path.exists(os.path.join(base_dir, filename)):
+            print(f"Serving {filename} from root")
+            return send_from_directory(base_dir, filename)
 
-# Serve the FlashTag demo
+    # Fallback to static
+    if os.path.exists(os.path.join(base_dir, 'static', 'auth.html')):
+        print("Serving auth.html from static")
+        return send_from_directory(os.path.join(base_dir, 'static'), 'auth.html')
+
+    return "No entry point (index.html, auth.html, etc.) found in root or static/ folder.", 404
+
 @app.route('/flashtag')
 def flashtag_demo():
-    return send_from_directory('static', 'flashtag_demo.html')
+    return send_from_directory(os.path.join(base_dir, 'static'), 'flashtag_demo.html')
 
-# API for FlashTag detection
 @app.route('/detect_flashtag', methods=['POST'])
 def detect_flashtag():
     if 'file' not in request.files:
@@ -31,7 +41,6 @@ def detect_flashtag():
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
 
-    # Read image from stream
     filestr = file.read()
     npimg = np.frombuffer(filestr, np.uint8)
     img = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
@@ -40,40 +49,23 @@ def detect_flashtag():
         return jsonify({'error': 'Invalid image'}), 400
 
     tags = detector.detect(img)
-
-    # Format results for JSON
-    results = []
-    for tag in tags:
-        results.append({
-            'id': tag['id'],
-            'center': tag['center']
-        })
-
+    results = [{'id': tag['id'], 'center': tag['center']} for tag in tags]
     return jsonify({'tags': results})
 
-# Safe file serving for assets
 @app.route('/<path:filename>')
 def serve_file(filename):
-    # Try serving from static first, then from root (only allowed files)
-    if os.path.exists(os.path.join('static', filename)):
-        return send_from_directory('static', filename)
+    # Try root first
+    if os.path.exists(os.path.join(base_dir, filename)):
+        # Basic security: don't serve .py files or hidden files
+        if filename.endswith('.py') or filename.startswith('.'):
+            return abort(403)
+        return send_from_directory(base_dir, filename)
 
-    # List of allowed files in root
-    allowed_root_files = [
-        'index.html', 'auth.html', 'login.html', 'chatbot.html',
-        'user_chat.html', 'img.html', 'Homepage.html',
-        'Registration As Agent.html', 'Registration old.html',
-        'Chat function.html', 'trial form.html'
-    ]
-    if filename in allowed_root_files and os.path.exists(filename):
-        return send_from_directory('.', filename)
+    # Try static
+    if os.path.exists(os.path.join(base_dir, 'static', filename)):
+        return send_from_directory(os.path.join(base_dir, 'static'), filename)
 
-    # Serve media files from root
-    if filename.endswith(('.mp4', '.png', '.jpg', '.jpeg', '.svg')):
-        if os.path.exists(filename):
-            return send_from_directory('.', filename)
-
-    return jsonify({'error': 'File not found'}), 404
+    return abort(404)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
