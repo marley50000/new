@@ -1,8 +1,13 @@
 import cv2
 import numpy as np
-from generator import generate_flash_tag
-from detector import FlashTagDetector
 import os
+import sys
+
+# Add parent directory to path to allow absolute imports from flash_tag package
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from flash_tag.generator import generate_flash_tag
+from flash_tag.detector import FlashTagDetector
 
 def apply_motion_blur(image, size=15, angle=45):
     """
@@ -54,8 +59,6 @@ def test_system():
                 print(f"CRITICAL ERROR: ID Mismatch! Expected {tid}, got {detected_id}")
         else:
             print("Result: FAILED (No tag detected)")
-            # Save failed case for debugging
-            cv2.imwrite(f"fail_case_{tid}.png", blurred)
 
 if __name__ == "__main__":
     test_system()

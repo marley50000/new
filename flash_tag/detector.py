@@ -12,10 +12,9 @@ class FlashTagDetector:
         else:
             gray = image
 
-        # Robust binarization for locator detection
-        # Use two different thresholds to handle extreme blur cases
         results = []
-        for block_size in [51, 81]:
+        # Try a range of block sizes for adaptive thresholding to be extremely robust
+        for block_size in [31, 51, 71, 91]:
             thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
                                             cv2.THRESH_BINARY_INV, block_size, 10)
 
@@ -24,20 +23,22 @@ class FlashTagDetector:
             for cnt in contours:
                 if len(cnt) < 5: continue
                 hull = cv2.convexHull(cnt)
-                if cv2.contourArea(hull) < 400: continue
+                if len(hull) < 5: continue # Extra check for fitEllipse
+                area = cv2.contourArea(hull)
+                if area < 400: continue
 
                 ellipse = cv2.fitEllipse(hull)
                 (x, y), (w, h), angle = ellipse
 
-                if min(w, h) / max(w, h) < 0.15: continue
+                # Aspect ratio check (be more lenient for extreme blur)
+                if min(w, h) / max(w, h) < 0.1: continue
 
                 decoded_id = self.decode_tag(gray, ellipse)
                 if decoded_id is not None:
-                    # Check if we already detected this tag (based on center proximity)
                     duplicate = False
                     for r in results:
                         dist = math.sqrt((r['center'][0]-x)**2 + (r['center'][1]-y)**2)
-                        if dist < 20:
+                        if dist < 30:
                             duplicate = True
                             break
                     if not duplicate:
@@ -51,6 +52,7 @@ class FlashTagDetector:
 
     def decode_tag(self, gray, ellipse):
         (x, y), (w, h), angle = ellipse
+        # Sampling radius - use slightly larger sampling area
         a = w / 2 * 0.65
         b = h / 2 * 0.65
 
@@ -60,8 +62,8 @@ class FlashTagDetector:
         phi = math.radians(angle)
         for i in range(self.num_segments):
             seg_intensities = []
-            # Increase sub-sampling for extreme cases
-            for sub_angle in np.linspace(-angle_step/3, angle_step/3, 5):
+            # Dense sub-sampling per segment
+            for sub_angle in np.linspace(-angle_step/2.5, angle_step/2.5, 7):
                 theta = math.radians(i * angle_step + sub_angle)
                 sx = int(x + a * math.cos(theta) * math.cos(phi) - b * math.sin(theta) * math.sin(phi))
                 sy = int(y + a * math.cos(theta) * math.sin(phi) + b * math.sin(theta) * math.cos(phi))
@@ -76,6 +78,7 @@ class FlashTagDetector:
 
         if not intensities: return None
 
+        # Local contrast check
         local_min = min(intensities)
         local_max = max(intensities)
         if local_max - local_min < 15: return None

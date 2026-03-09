@@ -1,12 +1,8 @@
-from flask import Flask, send_from_directory, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify, abort
 import os
 import cv2
 import numpy as np
-import sys
-
-# Add flash_tag directory to path so we can import the detector
-sys.path.append(os.path.join(os.path.dirname(__file__), 'flash_tag'))
-from detector import FlashTagDetector
+from flash_tag.detector import FlashTagDetector
 
 app = Flask(__name__, static_folder='static')
 detector = FlashTagDetector()
@@ -14,7 +10,7 @@ detector = FlashTagDetector()
 # Serve the main page
 @app.route('/')
 def index():
-    # If index.html exists in root, serve it. Otherwise auth.html
+    # Only allow serving index.html or auth.html
     if os.path.exists('index.html'):
         return send_from_directory('.', 'index.html')
     return send_from_directory('static', 'auth.html')
@@ -54,12 +50,12 @@ def detect_flashtag():
 
     return jsonify({'tags': results})
 
-# Serve other files
-@app.route('/<path:filename>')
-def serve_file(filename):
-    if os.path.exists(filename):
-        return send_from_directory('.', filename)
+# Restrict file serving to static directory
+@app.route('/static/<path:filename>')
+def serve_static(filename):
     return send_from_directory('static', filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Default to 5000 for standard environments, 3000 if configured otherwise via env var
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
