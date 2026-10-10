@@ -4,10 +4,10 @@ from trotro_router import TrotroRouter
 app = Flask(__name__, static_folder='static')
 router = TrotroRouter()
 
-# Serve main page
+# Serve main page (default to trotro route planner)
 @app.route('/')
 def index():
-    return send_from_directory('static', 'auth.html')
+    return send_from_directory('static', 'trotro.html')
 
 # Serve trotro map interface
 @app.route('/trotro')
@@ -79,4 +79,4 @@ def serve_file(filename):
     return send_from_directory('static', filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=3000, debug=True)
