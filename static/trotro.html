@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghana Trotro Navigator & Route Planner</title>
+
+    <!-- Leaflet CSS (Free OpenSource Leaflet) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #f4f6f9; color: #1e293b; height: 100vh; display: flex; flex-direction: column; }
+
+        header {
+            background: linear-gradient(135deg, #1e2050 0%, #111827 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .header-title h1 { font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem; }
+        .header-title p { font-size: 0.85rem; color: #94a3b8; margin-top: 0.2rem; }
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Side Search & Directions Panel */
+        .sidebar {
+            width: 380px;
+            background: #ffffff;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.05);
+            z-index: 900;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-section { padding: 1.25rem; border-bottom: 1px solid #e2e8f0; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #475569; }
+
+        .input-wrapper { display: flex; gap: 0.5rem; }
+        select, input {
+            width: 100%;
+            padding: 0.65rem 0.85rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        select:focus, input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn:hover { background: #1d4ed8; }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #1e293b;
+            padding: 0.65rem;
+        }
+        .btn-secondary:hover { background: #cbd5e1; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+
+        .route-summary {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 0.5rem; }
+        .summary-item { font-size: 0.85rem; }
+        .summary-item .label { color: #64748b; font-size: 0.75rem; display: block; }
+        .summary-item .value { font-weight: 700; color: #0f172a; font-size: 1rem; }
+
+        .step-list { margin-top: 1rem; list-style: none; }
+        .step-item {
+            position: relative;
+            padding-left: 2rem;
+            padding-bottom: 1.25rem;
+            border-left: 2px dashed #cbd5e1;
+            margin-left: 0.75rem;
+        }
+        .step-item:last-child { border-left: none; padding-bottom: 0; }
+        .step-icon {
+            position: absolute;
+            left: -0.85rem;
+            top: 0;
+            width: 1.6rem;
+            height: 1.6rem;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .step-content h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.2rem; }
+        .step-content p { font-size: 0.825rem; color: #64748b; }
+
+        /* Map Canvas */
+        #map { flex: 1; height: 100%; width: 100%; }
+
+        @media (max-width: 768px) {
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; height: 45vh; }
+            #map { height: 55vh; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>🚍 Ghana Trotro Route Planner</h1>
+            <p>100% Free & Open Navigation System for Trotros across Ghana</p>
+        </div>
+        <div>
+            <a href="/" style="color: #93c5fd; text-decoration: none; font-size: 0.85rem; font-weight: 500;">← Back to App</a>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Sidebar Controls & Routing Results -->
+        <div class="sidebar">
+            <div class="panel-section">
+                <div class="form-group">
+                    <label>📍 Your Current Pickup Location</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="origin-input" placeholder="GPS or Select Stop Below..." readonly value="Nkrumah Circle, Accra (Default)">
+                        <button class="btn btn-secondary" onclick="useCurrentLocation()" title="Detect GPS Location">📡 GPS</button>
+                    </div>
+                    <small id="gps-status" style="color:#2563eb; font-size: 0.75rem; margin-top:0.3rem; display:block;">Click GPS to detect current coordinates</small>
+                </div>
+
+                <div class="form-group">
+                    <label>🏁 Origin Terminal / Stop</label>
+                    <select id="origin-stop-select">
+                        <option value="">📡 Use Current GPS / Location Input</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>🎯 Destination Stop / Location</label>
+                    <select id="dest-stop-select">
+                        <option value="">-- Select Destination Stop --</option>
+                    </select>
+                </div>
+
+                <button class="btn" onclick="findRoute()">
+                    🔍 Search Trotro Route & Fare
+                </button>
+            </div>
+
+            <!-- Directions & Details Output -->
+            <div class="panel-section" id="results-panel">
+                <div style="text-align: center; color: #94a3b8; padding: 2rem 0;">
+                    <p>Select origin & destination above or use GPS to calculate live trotro routing.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Leaflet Map Canvas -->
+        <div id="map"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        let map;
+        let userLocation = { lat: 5.5586, lng: -0.2137 }; // Default: Accra Nkrumah Circle
+        let originMarker;
+        let routeLayersGroup; // LayerGroup for managing dynamic route layers (polylines, pickup/dropoff markers)
+        let stopMarkers = [];
+        let allStops = [];
+
+        // Initialize Map
+        function initMap() {
+            map = L.map('map').setView([userLocation.lat, userLocation.lng], 13);
+
+            // Free OpenStreetMap Tile Layer (Fully Commercial & Free)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            routeLayersGroup = L.layerGroup().addTo(map);
+
+            // Fetch trotro stops from backend API
+            loadStops();
+
+            // Default User Marker
+            originMarker = L.marker([userLocation.lat, userLocation.lng], {
+                title: "Your Location"
+            }).addTo(map).bindPopup("<b>📍 Your Location</b><br>Kwame Nkrumah Circle, Accra").openPopup();
+        }
+
+        async function loadStops() {
+            try {
+                const res = await fetch('/api/trotro/stops');
+                const data = await res.json();
+                if (data.status === 'success') {
+                    allStops = data.stops;
+                    populateStopDropdowns(allStops);
+                    plotStopsOnMap(allStops);
+                }
+            } catch (err) {
+                console.error("Error loading trotro stops:", err);
+            }
+        }
+
+        function populateStopDropdowns(stops) {
+            const origSelect = document.getElementById('origin-stop-select');
+            const destSelect = document.getElementById('dest-stop-select');
+
+            origSelect.innerHTML = '<option value="">📡 Use Current GPS / Location Input</option>';
+            destSelect.innerHTML = '<option value="">-- Select Destination Stop --</option>';
+
+            stops.forEach(s => {
+                const opt1 = document.createElement('option');
+                opt1.value = s.id;
+                opt1.textContent = `${s.name} (${s.city})`;
+                origSelect.appendChild(opt1);
+
+                const opt2 = document.createElement('option');
+                opt2.value = s.id;
+                opt2.textContent = `${s.name} (${s.city})`;
+                destSelect.appendChild(opt2);
+            });
+
+            // Default destination
+            destSelect.value = "acc_madina";
+        }
+
+        function plotStopsOnMap(stops) {
+            stops.forEach(s => {
+                const marker = L.circleMarker([s.lat, s.lng], {
+                    radius: 6,
+                    fillColor: "#3b82f6",
+                    color: "#ffffff",
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                marker.bindPopup(`<b>🚍 Station: ${s.name}</b><br>City: ${s.city}, ${s.region}`);
+                stopMarkers.push(marker);
+            });
+        }
+
+        function useCurrentLocation() {
+            const gpsStatus = document.getElementById('gps-status');
+            // Reset origin stop select to "Use Current GPS / Location Input"
+            document.getElementById('origin-stop-select').value = "";
+
+            if ("geolocation" in navigator) {
+                gpsStatus.textContent = "Locating your GPS position...";
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        gpsStatus.textContent = "GPS Acquired! Location updated.";
+                        document.getElementById('origin-input').value = `GPS: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`;
+
+                        if (originMarker) map.removeLayer(originMarker);
+                        originMarker = L.marker([userLocation.lat, userLocation.lng]).addTo(map)
+                            .bindPopup("<b>📍 Current Detected GPS Location</b>").openPopup();
+
+                        map.flyTo([userLocation.lat, userLocation.lng], 14);
+                    },
+                    (error) => {
+                        gpsStatus.textContent = "GPS lookup failed or denied. Using default location.";
+                    }
+                );
+            } else {
+                gpsStatus.textContent = "Geolocation not supported by browser.";
+            }
+        }
+
+        async function findRoute() {
+            const origStopId = document.getElementById('origin-stop-select').value;
+            const destStopId = document.getElementById('dest-stop-select').value;
+
+            if (!destStopId) {
+                alert("Please select a destination stop!");
+                return;
+            }
+
+            let body = {};
+
+            // If user selected a specific origin stop ID from the dropdown:
+            if (origStopId) {
+                body = { origin_stop_id: origStopId, dest_stop_id: destStopId };
+            } else {
+                // Otherwise use GPS / userLocation
+                const destStop = allStops.find(s => s.id === destStopId);
+                body = {
+                    origin: userLocation,
+                    destination: { lat: destStop.lat, lng: destStop.lng }
+                };
+            }
+
+            try {
+                const res = await fetch('/api/trotro/route', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    renderDirections(data.journey);
+                    renderRouteOnMap(data.journey);
+                } else {
+                    document.getElementById('results-panel').innerHTML = `
+                        <div style="color: #ef4444; padding: 1rem; text-align: center;">
+                            ⚠️ ${data.message || "No route found."}
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error("Routing request error:", err);
+            }
+        }
+
+        function renderDirections(journey) {
+            const panel = document.getElementById('results-panel');
+
+            if (journey.type === 'walk_only') {
+                panel.innerHTML = `
+                    <div class="badge badge-blue">Walking Only Route</div>
+                    <div class="route-summary">
+                        <p>Your origin and destination are close. You can walk directly to the destination stop.</p>
+                        <div class="summary-grid">
+                            <div class="summary-item"><span class="label">Walk Distance</span><span class="value">${journey.walk_to_pickup_km} km</span></div>
+                            <div class="summary-item"><span class="label">Walk Time</span><span class="value">${journey.walk_to_pickup_mins} mins</span></div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let legsHtml = '';
+            journey.trotro_legs.forEach((leg, index) => {
+                legsHtml += `
+                    <li class="step-item">
+                        <div class="step-icon">${index + 1}</div>
+                        <div class="step-content">
+                            <h4>Pick Trotro: <span style="color:#2563eb">${leg.route_name}</span></h4>
+                            <p><b>Board at:</b> ${leg.pickup_stop.name}</p>
+                            <p><b>Alight at:</b> ${leg.dropoff_stop.name}</p>
+                            <p><b>Est Fare:</b> GH₵ ${leg.fare_ghs.toFixed(2)} | <b>Time:</b> ~${Math.round(leg.est_time_mins)} mins</p>
+                        </div>
+                    </li>
+                `;
+            });
+
+            panel.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="badge badge-green">Recommended Trotro Route</span>
+                    <span class="badge badge-blue">Fare: GH₵ ${journey.total_fare_ghs.toFixed(2)}</span>
+                </div>
+
+                <div class="route-summary">
+                    <div class="summary-grid">
+                        <div class="summary-item"><span class="label">Walk to Pick Car</span><span class="value">${journey.walk_to_pickup_km} km (${journey.walk_to_pickup_mins}m)</span></div>
+                        <div class="summary-item"><span class="label">Total Travel Time</span><span class="value">~${journey.total_time_mins} mins</span></div>
+                        <div class="summary-item"><span class="label">Trotro Distance</span><span class="value">${journey.total_trotro_dist_km} km</span></div>
+                        <div class="summary-item"><span class="label">Total Fare</span><span class="value">GH₵ ${journey.total_fare_ghs.toFixed(2)}</span></div>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 0.95rem; font-weight: 700; margin: 1.25rem 0 0.75rem 0;">Step-by-Step Directions:</h3>
+
+                <ul class="step-list">
+                    <li class="step-item">
+                        <div class="step-icon" style="background:#10b981;">🚶</div>
+                        <div class="step-content">
+                            <h4>Walk to Pickup Station ("Where to pick car")</h4>
+                            <p>Head towards <b>${journey.pickup_stop.name}</b> (${journey.walk_to_pickup_km} km, ~${journey.walk_to_pickup_mins} mins walk)</p>
+                        </div>
+                    </li>
+
+                    ${legsHtml}
+
+                    <li class="step-item">
+                        <div class="step-icon" style="background:#ef4444;">🎯</div>
+                        <div class="step-content">
+                            <h4>Arrive at Final Destination</h4>
+                            <p>Alight at <b>${journey.dropoff_stop.name}</b> and reach your target destination.</p>
+                        </div>
+                    </li>
+                </ul>
+            `;
+        }
+
+        function renderRouteOnMap(journey) {
+            // Clear any previous route layers (polylines, pickup/dropoff markers)
+            routeLayersGroup.clearLayers();
+
+            const coords = journey.path_coords.map(c => [c.lat, c.lng]);
+
+            // Draw polyline route
+            const routePolyline = L.polyline(coords, {
+                color: '#2563eb',
+                weight: 5,
+                opacity: 0.8,
+                dashArray: '8, 8'
+            }).addTo(routeLayersGroup);
+
+            // Add pickup marker
+            const pickup = journey.pickup_stop;
+            L.marker([pickup.lat, pickup.lng], {
+                title: "Pick Car Here"
+            }).addTo(routeLayersGroup).bindPopup(`<b>🚌 PICK CAR HERE</b><br>${pickup.name}`).openPopup();
+
+            // Add dropoff marker
+            const dropoff = journey.dropoff_stop;
+            L.marker([dropoff.lat, dropoff.lng], {
+                title: "Destination Stop"
+            }).addTo(routeLayersGroup).bindPopup(`<b>🎯 DROP OFF HERE</b><br>${dropoff.name}`);
+
+            map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>
