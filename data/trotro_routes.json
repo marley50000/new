@@ -1,0 +1,265 @@
+{
+  "stops": [
+    { "id": "acc_circle", "name": "Kwame Nkrumah Circle Overhead / Neoplan Station", "city": "Accra", "region": "Greater Accra", "lat": 5.5586, "lng": -0.2137 },
+    { "id": "acc_kaneshie", "name": "Kaneshie Market Station", "city": "Accra", "region": "Greater Accra", "lat": 5.5670, "lng": -0.2335 },
+    { "id": "acc_odorkor", "name": "Odorkor Station / Traffic Light", "city": "Accra", "region": "Greater Accra", "lat": 5.5745, "lng": -0.2580 },
+    { "id": "acc_mallam", "name": "Mallam Junction", "city": "Accra", "region": "Greater Accra", "lat": 5.5714, "lng": -0.2831 },
+    { "id": "acc_weija", "name": "Weija Junction / Choice", "city": "Accra", "region": "Greater Accra", "lat": 5.5560, "lng": -0.3200 },
+    { "id": "acc_kasoa", "name": "Kasoa New Market Station", "city": "Kasoa", "region": "Central", "lat": 5.5340, "lng": -0.4160 },
+    { "id": "acc_dansoman", "name": "Dansoman Keep Fit / Roundabout", "city": "Accra", "region": "Greater Accra", "lat": 5.5488, "lng": -0.2581 },
+
+    { "id": "acc_37", "name": "37 Military Hospital Bus Stop", "city": "Accra", "region": "Greater Accra", "lat": 5.5878, "lng": -0.1802 },
+    { "id": "acc_airport", "name": "Airport Junction / Airport City", "city": "Accra", "region": "Greater Accra", "lat": 5.6015, "lng": -0.1775 },
+    { "id": "acc_shiashie", "name": "Shiashie Bus Stop", "city": "Accra", "region": "Greater Accra", "lat": 5.6175, "lng": -0.1770 },
+    { "id": "acc_legon", "name": "UG Legon Main Gate / Okponglo", "city": "Accra", "region": "Greater Accra", "lat": 5.6515, "lng": -0.1837 },
+    { "id": "acc_madina", "name": "Madina Zongo Junction / Station", "city": "Accra", "region": "Greater Accra", "lat": 5.6698, "lng": -0.1662 },
+    { "id": "acc_adenta", "name": "Adenta Barrier / Station", "city": "Accra", "region": "Greater Accra", "lat": 5.7112, "lng": -0.1585 },
+
+    { "id": "acc_lapaz", "name": "Lapaz Station / Bambolino", "city": "Accra", "region": "Greater Accra", "lat": 5.5997, "lng": -0.2450 },
+    { "id": "acc_tesano", "name": "Tesano Police Station", "city": "Accra", "region": "Greater Accra", "lat": 5.5850, "lng": -0.2280 },
+    { "id": "acc_achimota", "name": "Achimota New Bus Terminal", "city": "Accra", "region": "Greater Accra", "lat": 5.6162, "lng": -0.2295 },
+    { "id": "acc_pokuese", "name": "Pokuase Interchange", "city": "Accra", "region": "Greater Accra", "lat": 5.6880, "lng": -0.2880 },
+
+    { "id": "acc_tema_station", "name": "Tema Station Central Accra", "city": "Accra", "region": "Greater Accra", "lat": 5.5482, "lng": -0.2015 },
+    { "id": "acc_osu", "name": "Osu Oxford Street / Danquah Circle", "city": "Accra", "region": "Greater Accra", "lat": 5.5560, "lng": -0.1830 },
+    { "id": "acc_cantonments", "name": "Cantonments / Post Office", "city": "Accra", "region": "Greater Accra", "lat": 5.5720, "lng": -0.1760 },
+    { "id": "acc_labone", "name": "Labone Junction", "city": "Accra", "region": "Greater Accra", "lat": 5.5610, "lng": -0.1650 },
+    { "id": "acc_la", "name": "La Trade Fair / Hospital", "city": "Accra", "region": "Greater Accra", "lat": 5.5580, "lng": -0.1420 },
+    { "id": "acc_spintex", "name": "Spintex Coastal Junction", "city": "Accra", "region": "Greater Accra", "lat": 5.6150, "lng": -0.1080 },
+    { "id": "acc_tema_c1", "name": "Tema Community 1 Main Market", "city": "Tema", "region": "Greater Accra", "lat": 5.6450, "lng": -0.0030 },
+
+    { "id": "ksi_kejetia", "name": "Kejetia Central Market Terminal", "city": "Kumasi", "region": "Ashanti", "lat": 6.6960, "lng": -1.6240 },
+    { "id": "ksi_asokwa", "name": "Asokwa Interchange", "city": "Kumasi", "region": "Ashanti", "lat": 6.6710, "lng": -1.6090 },
+    { "id": "ksi_knust", "name": "KNUST Tech Junction", "city": "Kumasi", "region": "Ashanti", "lat": 6.6800, "lng": -1.5720 },
+    { "id": "ksi_sofo_line", "name": "Sofoline Interchange", "city": "Kumasi", "region": "Ashanti", "lat": 6.6920, "lng": -1.6520 },
+    { "id": "ksi_suame", "name": "Suame Roundabout", "city": "Kumasi", "region": "Ashanti", "lat": 6.7150, "lng": -1.6280 },
+    { "id": "ksi_tafo", "name": "Tafo Pankrono Station", "city": "Kumasi", "region": "Ashanti", "lat": 6.7420, "lng": -1.6050 },
+    { "id": "ksi_santasi", "name": "Santasi Roundabout", "city": "Kumasi", "region": "Ashanti", "lat": 6.6630, "lng": -1.6430 },
+
+    { "id": "tkd_market_circle", "name": "Takoradi Market Circle", "city": "Takoradi", "region": "Western", "lat": 4.8885, "lng": -1.7560 },
+    { "id": "tkd_kwesimintsim", "name": "Kwesimintsim Station", "city": "Takoradi", "region": "Western", "lat": 4.9080, "lng": -1.7820 },
+    { "id": "tkd_kojokrom", "name": "Kojokrom Station", "city": "Takoradi", "region": "Western", "lat": 4.9350, "lng": -1.7280 },
+    { "id": "tkd_sekondi", "name": "Sekondi Market", "city": "Sekondi", "region": "Western", "lat": 4.9380, "lng": -1.7060 },
+
+    { "id": "tml_aboabo", "name": "Tamale Aboabo Market Station", "city": "Tamale", "region": "Northern", "lat": 9.4075, "lng": -0.8390 },
+    { "id": "tml_kalpohin", "name": "Kalpohin Estate Junction", "city": "Tamale", "region": "Northern", "lat": 9.4210, "lng": -0.8250 },
+    { "id": "tml_nyankpala", "name": "UDS Nyankpala Campus Stop", "city": "Tamale", "region": "Northern", "lat": 9.4020, "lng": -0.9850 },
+
+    { "id": "cc_kotokuraba", "name": "Kotokuraba Market Station", "city": "Cape Coast", "region": "Central", "lat": 5.1090, "lng": -1.2460 },
+    { "id": "cc_ucc", "name": "UCC East Gate", "city": "Cape Coast", "region": "Central", "lat": 5.1030, "lng": -1.2880 },
+    { "id": "cc_pex", "name": "Pedu Junction", "city": "Cape Coast", "region": "Central", "lat": 5.1220, "lng": -1.2610 }
+  ],
+  "routes": [
+    {
+      "id": "R_ACC_01", "code": "ACC-M1", "name": "Madina - Circle via Legon, Shiashie, Airport & 37", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 8.50, "est_time_mins": 35,
+      "stops": ["acc_madina", "acc_legon", "acc_shiashie", "acc_airport", "acc_37", "acc_circle"],
+      "waypoints": [
+        { "lat": 5.6698, "lng": -0.1662 },
+        { "lat": 5.6580, "lng": -0.1770 },
+        { "lat": 5.6515, "lng": -0.1837 },
+        { "lat": 5.6320, "lng": -0.1800 },
+        { "lat": 5.6175, "lng": -0.1770 },
+        { "lat": 5.6015, "lng": -0.1775 },
+        { "lat": 5.5878, "lng": -0.1802 },
+        { "lat": 5.5720, "lng": -0.1980 },
+        { "lat": 5.5586, "lng": -0.2137 }
+      ]
+    },
+    {
+      "id": "R_ACC_02", "code": "ACC-K1", "name": "Kaneshie - Circle via Feo Oyo", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 5.00, "est_time_mins": 15,
+      "stops": ["acc_kaneshie", "acc_circle"],
+      "waypoints": [
+        { "lat": 5.5670, "lng": -0.2335 },
+        { "lat": 5.5620, "lng": -0.2240 },
+        { "lat": 5.5586, "lng": -0.2137 }
+      ]
+    },
+    {
+      "id": "R_ACC_03", "code": "ACC-L1", "name": "Lapaz - Circle via Tesano & Kaneshie", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 7.00, "est_time_mins": 25,
+      "stops": ["acc_lapaz", "acc_tesano", "acc_kaneshie", "acc_circle"],
+      "waypoints": [
+        { "lat": 5.5997, "lng": -0.2450 },
+        { "lat": 5.5850, "lng": -0.2280 },
+        { "lat": 5.5670, "lng": -0.2335 },
+        { "lat": 5.5586, "lng": -0.2137 }
+      ]
+    },
+    {
+      "id": "R_ACC_04", "code": "ACC-T1", "name": "Tema Station - Madina via Osu, 37 & Legon", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 10.00, "est_time_mins": 45,
+      "stops": ["acc_tema_station", "acc_osu", "acc_37", "acc_shiashie", "acc_legon", "acc_madina"],
+      "waypoints": [
+        { "lat": 5.5482, "lng": -0.2015 },
+        { "lat": 5.5560, "lng": -0.1830 },
+        { "lat": 5.5720, "lng": -0.1760 },
+        { "lat": 5.5878, "lng": -0.1802 },
+        { "lat": 5.6175, "lng": -0.1770 },
+        { "lat": 5.6515, "lng": -0.1837 },
+        { "lat": 5.6698, "lng": -0.1662 }
+      ]
+    },
+    {
+      "id": "R_ACC_05", "code": "ACC-A1", "name": "Achimota - Circle via Tesano", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 6.50, "est_time_mins": 20,
+      "stops": ["acc_achimota", "acc_lapaz", "acc_tesano", "acc_circle"],
+      "waypoints": [
+        { "lat": 5.6162, "lng": -0.2295 },
+        { "lat": 5.5997, "lng": -0.2450 },
+        { "lat": 5.5850, "lng": -0.2280 },
+        { "lat": 5.5586, "lng": -0.2137 }
+      ]
+    },
+    {
+      "id": "R_ACC_06", "code": "ACC-M2", "name": "Mallam - Kaneshie via Odorkor", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 7.50, "est_time_mins": 30,
+      "stops": ["acc_mallam", "acc_odorkor", "acc_kaneshie"],
+      "waypoints": [
+        { "lat": 5.5714, "lng": -0.2831 },
+        { "lat": 5.5745, "lng": -0.2580 },
+        { "lat": 5.5670, "lng": -0.2335 }
+      ]
+    },
+    {
+      "id": "R_ACC_07", "code": "ACC-K2", "name": "Kasoa - Kaneshie via Weija, Mallam & Odorkor", "city": "Accra / Kasoa", "region": "Central / Greater Accra",
+      "fare_ghs": 12.00, "est_time_mins": 50,
+      "stops": ["acc_kasoa", "acc_weija", "acc_mallam", "acc_odorkor", "acc_kaneshie"],
+      "waypoints": [
+        { "lat": 5.5340, "lng": -0.4160 },
+        { "lat": 5.5560, "lng": -0.3200 },
+        { "lat": 5.5714, "lng": -0.2831 },
+        { "lat": 5.5745, "lng": -0.2580 },
+        { "lat": 5.5670, "lng": -0.2335 }
+      ]
+    },
+    {
+      "id": "R_ACC_08", "code": "ACC-TM1", "name": "Tema Community 1 - Shiashie via Spintex", "city": "Tema / Accra", "region": "Greater Accra",
+      "fare_ghs": 11.00, "est_time_mins": 40,
+      "stops": ["acc_tema_c1", "acc_spintex", "acc_shiashie"],
+      "waypoints": [
+        { "lat": 5.6450, "lng": -0.0030 },
+        { "lat": 5.6150, "lng": -0.1080 },
+        { "lat": 5.6175, "lng": -0.1770 }
+      ]
+    },
+    {
+      "id": "R_ACC_09", "code": "ACC-AD1", "name": "Adenta - Madina", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 4.50, "est_time_mins": 10,
+      "stops": ["acc_adenta", "acc_madina"],
+      "waypoints": [
+        { "lat": 5.7112, "lng": -0.1585 },
+        { "lat": 5.6698, "lng": -0.1662 }
+      ]
+    },
+    {
+      "id": "R_ACC_10", "code": "ACC-TS1", "name": "Tema Station - Circle Direct", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 5.00, "est_time_mins": 12,
+      "stops": ["acc_tema_station", "acc_circle"],
+      "waypoints": [
+        { "lat": 5.5482, "lng": -0.2015 },
+        { "lat": 5.5586, "lng": -0.2137 }
+      ]
+    },
+    {
+      "id": "R_ACC_11", "code": "ACC-D1", "name": "Dansoman - Circle via Kaneshie", "city": "Accra", "region": "Greater Accra",
+      "fare_ghs": 6.50, "est_time_mins": 25,
+      "stops": ["acc_dansoman", "acc_kaneshie", "acc_circle"],
+      "waypoints": [
+        { "lat": 5.5488, "lng": -0.2581 },
+        { "lat": 5.5670, "lng": -0.2335 },
+        { "lat": 5.5586, "lng": -0.2137 }
+      ]
+    },
+
+    {
+      "id": "R_KSI_01", "code": "KSI-K1", "name": "KNUST - Kejetia via Asokwa", "city": "Kumasi", "region": "Ashanti",
+      "fare_ghs": 7.00, "est_time_mins": 25,
+      "stops": ["ksi_knust", "ksi_asokwa", "ksi_kejetia"],
+      "waypoints": [
+        { "lat": 6.6800, "lng": -1.5720 },
+        { "lat": 6.6710, "lng": -1.6090 },
+        { "lat": 6.6960, "lng": -1.6240 }
+      ]
+    },
+    {
+      "id": "R_KSI_02", "code": "KSI-S1", "name": "Sofoline - Kejetia", "city": "Kumasi", "region": "Ashanti",
+      "fare_ghs": 4.50, "est_time_mins": 15,
+      "stops": ["ksi_sofo_line", "ksi_kejetia"],
+      "waypoints": [
+        { "lat": 6.6920, "lng": -1.6520 },
+        { "lat": 6.6960, "lng": -1.6240 }
+      ]
+    },
+    {
+      "id": "R_KSI_03", "code": "KSI-T1", "name": "Tafo - Kejetia via Suame", "city": "Kumasi", "region": "Ashanti",
+      "fare_ghs": 6.00, "est_time_mins": 20,
+      "stops": ["ksi_tafo", "ksi_suame", "ksi_kejetia"],
+      "waypoints": [
+        { "lat": 6.7420, "lng": -1.6050 },
+        { "lat": 6.7150, "lng": -1.6280 },
+        { "lat": 6.6960, "lng": -1.6240 }
+      ]
+    },
+    {
+      "id": "R_KSI_04", "code": "KSI-ST1", "name": "Santasi - Kejetia", "city": "Kumasi", "region": "Ashanti",
+      "fare_ghs": 5.50, "est_time_mins": 18,
+      "stops": ["ksi_santasi", "ksi_kejetia"],
+      "waypoints": [
+        { "lat": 6.6630, "lng": -1.6430 },
+        { "lat": 6.6960, "lng": -1.6240 }
+      ]
+    },
+
+    {
+      "id": "R_TKD_01", "code": "TKD-M1", "name": "Market Circle - Kwesimintsim", "city": "Takoradi", "region": "Western",
+      "fare_ghs": 5.00, "est_time_mins": 15,
+      "stops": ["tkd_market_circle", "tkd_kwesimintsim"],
+      "waypoints": [
+        { "lat": 4.8885, "lng": -1.7560 },
+        { "lat": 4.9080, "lng": -1.7820 }
+      ]
+    },
+    {
+      "id": "R_TKD_02", "code": "TKD-S1", "name": "Market Circle - Sekondi via Kojokrom", "city": "Takoradi / Sekondi", "region": "Western",
+      "fare_ghs": 6.50, "est_time_mins": 25,
+      "stops": ["tkd_market_circle", "tkd_kojokrom", "tkd_sekondi"],
+      "waypoints": [
+        { "lat": 4.8885, "lng": -1.7560 },
+        { "lat": 4.9350, "lng": -1.7280 },
+        { "lat": 4.9380, "lng": -1.7060 }
+      ]
+    },
+
+    {
+      "id": "R_TML_01", "code": "TML-A1", "name": "Aboabo - Kalpohin", "city": "Tamale", "region": "Northern",
+      "fare_ghs": 4.00, "est_time_mins": 12,
+      "stops": ["tml_aboabo", "tml_kalpohin"],
+      "waypoints": [
+        { "lat": 9.4075, "lng": -0.8390 },
+        { "lat": 9.4210, "lng": -0.8250 }
+      ]
+    },
+    {
+      "id": "R_TML_02", "code": "TML-U1", "name": "Aboabo - UDS Nyankpala", "city": "Tamale", "region": "Northern",
+      "fare_ghs": 8.00, "est_time_mins": 30,
+      "stops": ["tml_aboabo", "tml_nyankpala"],
+      "waypoints": [
+        { "lat": 9.4075, "lng": -0.8390 },
+        { "lat": 9.4020, "lng": -0.9850 }
+      ]
+    },
+
+    {
+      "id": "R_CC_01", "code": "CC-U1", "name": "Kotokuraba - UCC via Pedu Junction", "city": "Cape Coast", "region": "Central",
+      "fare_ghs": 5.00, "est_time_mins": 15,
+      "stops": ["cc_kotokuraba", "cc_pex", "cc_ucc"],
+      "waypoints": [
+        { "lat": 5.1090, "lng": -1.2460 },
+        { "lat": 5.1220, "lng": -1.2610 },
+        { "lat": 5.1030, "lng": -1.2880 }
+      ]
+    }
+  ]
+}
