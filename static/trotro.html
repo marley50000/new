@@ -96,6 +96,7 @@
         }
         .badge-green { background: #dcfce7; color: #166534; }
         .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
 
         .route-summary {
             background: #f8fafc;
@@ -154,7 +155,7 @@
             <p>100% Free & Open Navigation System for Trotros across Ghana</p>
         </div>
         <div>
-            <a href="/" style="color: #93c5fd; text-decoration: none; font-size: 0.85rem; font-weight: 500;">← Back to App</a>
+            <a href="/" style="color: #93c5fd; text-decoration: none; font-size: 0.85rem; font-weight: 500;">← Refresh App</a>
         </div>
     </header>
 
@@ -288,7 +289,6 @@
 
         function useCurrentLocation() {
             const gpsStatus = document.getElementById('gps-status');
-            // Reset origin stop select to "Use Current GPS / Location Input"
             document.getElementById('origin-stop-select').value = "";
 
             if ("geolocation" in navigator) {
@@ -328,11 +328,9 @@
 
             let body = {};
 
-            // If user selected a specific origin stop ID from the dropdown:
             if (origStopId) {
                 body = { origin_stop_id: origStopId, dest_stop_id: destStopId };
             } else {
-                // Otherwise use GPS / userLocation
                 const destStop = allStops.find(s => s.id === destStopId);
                 body = {
                     origin: userLocation,
@@ -380,16 +378,30 @@
                 return;
             }
 
+            let longWalkNotice = '';
+            if (journey.walk_to_pickup_km > 2.0) {
+                longWalkNotice = `
+                    <div class="badge badge-warning" style="margin-top:0.5rem; display:block; width:100%; text-align:center;">
+                        ⚠️ Station is ${journey.walk_to_pickup_km} km away (~${journey.walk_to_pickup_mins} mins walk). Consider taking a drop/taxi to ${journey.pickup_stop.name}.
+                    </div>
+                `;
+            }
+
             let legsHtml = '';
             journey.trotro_legs.forEach((leg, index) => {
+                const stopsText = leg.intermediate_stops && leg.intermediate_stops.length > 0
+                    ? `<br><small style="color:#64748b;">Passes through: ${leg.intermediate_stops.join(', ')}</small>`
+                    : '';
+
                 legsHtml += `
                     <li class="step-item">
                         <div class="step-icon">${index + 1}</div>
                         <div class="step-content">
-                            <h4>Pick Trotro: <span style="color:#2563eb">${leg.route_name}</span></h4>
-                            <p><b>Board at:</b> ${leg.pickup_stop.name}</p>
-                            <p><b>Alight at:</b> ${leg.dropoff_stop.name}</p>
+                            <h4>Board Trotro: <span style="color:#2563eb">${leg.route_name}</span></h4>
+                            <p><b>Pickup Station:</b> ${leg.pickup_stop.name}</p>
+                            <p><b>Dropoff Station:</b> ${leg.dropoff_stop.name}</p>
                             <p><b>Est Fare:</b> GH₵ ${leg.fare_ghs.toFixed(2)} | <b>Time:</b> ~${Math.round(leg.est_time_mins)} mins</p>
+                            ${stopsText}
                         </div>
                     </li>
                 `;
@@ -401,11 +413,13 @@
                     <span class="badge badge-blue">Fare: GH₵ ${journey.total_fare_ghs.toFixed(2)}</span>
                 </div>
 
+                ${longWalkNotice}
+
                 <div class="route-summary">
                     <div class="summary-grid">
-                        <div class="summary-item"><span class="label">Walk to Pick Car</span><span class="value">${journey.walk_to_pickup_km} km (${journey.walk_to_pickup_mins}m)</span></div>
-                        <div class="summary-item"><span class="label">Total Travel Time</span><span class="value">~${journey.total_time_mins} mins</span></div>
-                        <div class="summary-item"><span class="label">Trotro Distance</span><span class="value">${journey.total_trotro_dist_km} km</span></div>
+                        <div class="summary-item"><span class="label">Nearest Station</span><span class="value">${journey.pickup_stop.name}</span></div>
+                        <div class="summary-item"><span class="label">Distance to Station</span><span class="value">${journey.walk_to_pickup_km} km (${journey.walk_to_pickup_mins}m)</span></div>
+                        <div class="summary-item"><span class="label">Trotro Travel</span><span class="value">${journey.total_trotro_dist_km} km (~${journey.total_time_mins}m)</span></div>
                         <div class="summary-item"><span class="label">Total Fare</span><span class="value">GH₵ ${journey.total_fare_ghs.toFixed(2)}</span></div>
                     </div>
                 </div>
@@ -416,8 +430,8 @@
                     <li class="step-item">
                         <div class="step-icon" style="background:#10b981;">🚶</div>
                         <div class="step-content">
-                            <h4>Walk to Pickup Station ("Where to pick car")</h4>
-                            <p>Head towards <b>${journey.pickup_stop.name}</b> (${journey.walk_to_pickup_km} km, ~${journey.walk_to_pickup_mins} mins walk)</p>
+                            <h4>Head to Boarding Station ("Where to pick car")</h4>
+                            <p>Walk or get a drop to <b>${journey.pickup_stop.name}</b> (${journey.walk_to_pickup_km} km, ~${journey.walk_to_pickup_mins} mins walk)</p>
                         </div>
                     </li>
 
@@ -427,7 +441,7 @@
                         <div class="step-icon" style="background:#ef4444;">🎯</div>
                         <div class="step-content">
                             <h4>Arrive at Final Destination</h4>
-                            <p>Alight at <b>${journey.dropoff_stop.name}</b> and reach your target destination.</p>
+                            <p>Alight at <b>${journey.dropoff_stop.name}</b>.</p>
                         </div>
                     </li>
                 </ul>
@@ -440,25 +454,25 @@
 
             const coords = journey.path_coords.map(c => [c.lat, c.lng]);
 
-            // Draw polyline route
+            // Draw polyline route along road waypoints
             const routePolyline = L.polyline(coords, {
                 color: '#2563eb',
-                weight: 5,
-                opacity: 0.8,
-                dashArray: '8, 8'
+                weight: 6,
+                opacity: 0.9,
+                lineJoin: 'round'
             }).addTo(routeLayersGroup);
 
-            // Add pickup marker
+            // Add pickup marker ("WHERE TO PICK CAR")
             const pickup = journey.pickup_stop;
             L.marker([pickup.lat, pickup.lng], {
                 title: "Pick Car Here"
-            }).addTo(routeLayersGroup).bindPopup(`<b>🚌 PICK CAR HERE</b><br>${pickup.name}`).openPopup();
+            }).addTo(routeLayersGroup).bindPopup(`<b>🚌 BOARD TROTRO HERE</b><br>${pickup.name}`).openPopup();
 
             // Add dropoff marker
             const dropoff = journey.dropoff_stop;
             L.marker([dropoff.lat, dropoff.lng], {
                 title: "Destination Stop"
-            }).addTo(routeLayersGroup).bindPopup(`<b>🎯 DROP OFF HERE</b><br>${dropoff.name}`);
+            }).addTo(routeLayersGroup).bindPopup(`<b>🎯 ALIGHT HERE</b><br>${dropoff.name}`);
 
             map.fitBounds(routePolyline.getBounds(), { padding: [50, 50] });
         }

@@ -45,6 +45,7 @@ class TrotroRouter:
 
             fare_per_segment = route['fare_ghs'] / num_segments
             time_per_segment = route['est_time_mins'] / num_segments
+            waypoints = route.get('waypoints', [])
 
             # Forward and backward direction (trotros run both ways)
             for i in range(num_segments):
@@ -54,18 +55,23 @@ class TrotroRouter:
 
                 # Edge from u to v
                 self.graph.add_edge(u, v, route_id=route_id, route_name=route['name'],
-                                    fare=fare_per_segment, time=time_per_segment, dist_km=dist_km)
+                                    fare=fare_per_segment, time=time_per_segment, dist_km=dist_km,
+                                    waypoints=waypoints)
                 # Edge from v to u
                 self.graph.add_edge(v, u, route_id=route_id, route_name=route['name'],
-                                    fare=fare_per_segment, time=time_per_segment, dist_km=dist_km)
+                                    fare=fare_per_segment, time=time_per_segment, dist_km=dist_km,
+                                    waypoints=list(reversed(waypoints)) if waypoints else [])
 
-    def find_nearest_stop(self, lat, lng, limit=5):
+    def find_nearest_stop(self, lat, lng, limit=5, max_dist_km=None):
         """
         Find closest trotro stops to a given coordinate.
+        Optionally filter by maximum distance in kilometers.
         """
         stop_distances = []
         for stop_id, stop in self.stops.items():
             dist = haversine_km(lat, lng, stop['lat'], stop['lng'])
+            if max_dist_km and dist > max_dist_km:
+                continue
             stop_distances.append({
                 "stop": stop,
                 "distance_km": round(dist, 3),
@@ -81,6 +87,9 @@ class TrotroRouter:
         origin_stops = self.find_nearest_stop(start_lat, start_lng, limit=3)
         dest_stops = self.find_nearest_stop(end_lat, end_lng, limit=3)
 
+        if not origin_stops or not dest_stops:
+            return {"error": "No nearby trotro stations found within reasonable range."}
+
         best_journey = None
         min_total_cost = float('inf')
 
@@ -92,7 +101,6 @@ class TrotroRouter:
                 # Same stop
                 if orig_id == dest_id:
                     total_time = orig['walking_time_mins'] + dest['walking_time_mins']
-                    # Only treat as walk-only if walking distance is reasonably small (< 5km)
                     if orig['distance_km'] + dest['distance_km'] < 5.0:
                         journey = {
                             "type": "walk_only",
@@ -118,15 +126,14 @@ class TrotroRouter:
 
                 if nx.has_path(self.graph, orig_id, dest_id):
                     try:
-                        # Find shortest path using time/distance heuristic weight
                         path = nx.shortest_path(self.graph, orig_id, dest_id, weight='time')
 
                         trotro_legs = []
                         total_fare = 0.0
                         total_trotro_time = 0.0
                         total_trotro_dist = 0.0
-                        path_coords = [{"lat": start_lat, "lng": start_lng}]
 
+                        path_coords = [{"lat": start_lat, "lng": start_lng}]
                         current_leg = None
 
                         for i in range(len(path) - 1):
@@ -135,9 +142,18 @@ class TrotroRouter:
                             u_stop = self.stops[u]
                             v_stop = self.stops[v]
 
+                            # Append start node
                             if not path_coords or path_coords[-1] != {"lat": u_stop['lat'], "lng": u_stop['lng']}:
                                 path_coords.append({"lat": u_stop['lat'], "lng": u_stop['lng']})
-                            path_coords.append({"lat": v_stop['lat'], "lng": v_stop['lng']})
+
+                            # Append edge waypoints if available
+                            if edge.get('waypoints'):
+                                for wp in edge['waypoints']:
+                                    if path_coords[-1] != wp:
+                                        path_coords.append(wp)
+
+                            if path_coords[-1] != {"lat": v_stop['lat'], "lng": v_stop['lng']}:
+                                path_coords.append({"lat": v_stop['lat'], "lng": v_stop['lng']})
 
                             # Merge consecutive edges on the same trotro line
                             if current_leg and current_leg['route_id'] == edge['route_id']:
