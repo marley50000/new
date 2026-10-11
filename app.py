@@ -42,7 +42,7 @@ def nearest_stop():
         lat = float(request.args.get('lat'))
         lng = float(request.args.get('lng'))
     except (TypeError, ValueError):
-        return jsonify({"status": "error", "message": "Valid lat and lng query params are required"}), 400
+        return jsonify({"status": "error", "message": "Valid lat and lng query params are required"}), 200
 
     stops = router.find_nearest_stop(lat, lng, limit=5)
     return jsonify({"status": "success", "nearest_stops": stops})
@@ -59,17 +59,29 @@ def calculate_route():
 
     if "origin_stop_id" in data and "dest_stop_id" in data:
         result = router.find_route_by_stop_ids(data["origin_stop_id"], data["dest_stop_id"])
+    elif "origin_stop_id" in data and "destination" in data:
+        orig = router.stops.get(data["origin_stop_id"])
+        dest = data["destination"]
+        if not orig:
+            return jsonify({"status": "error", "message": "Invalid origin stop ID"}), 200
+        result = router.find_route_by_coords(orig["lat"], orig["lng"], dest["lat"], dest["lng"])
+    elif "origin" in data and "dest_stop_id" in data:
+        orig = data["origin"]
+        dest = router.stops.get(data["dest_stop_id"])
+        if not dest:
+            return jsonify({"status": "error", "message": "Invalid destination stop ID"}), 200
+        result = router.find_route_by_coords(orig["lat"], orig["lng"], dest["lat"], dest["lng"])
     elif "origin" in data and "destination" in data:
         orig = data["origin"]
         dest = data["destination"]
         if "lat" not in orig or "lng" not in orig or "lat" not in dest or "lng" not in dest:
-            return jsonify({"status": "error", "message": "Origin and Destination must include lat and lng"}), 400
+            return jsonify({"status": "error", "message": "Origin and Destination must include lat and lng"}), 200
         result = router.find_route_by_coords(orig["lat"], orig["lng"], dest["lat"], dest["lng"])
     else:
-        return jsonify({"status": "error", "message": "Please provide origin and destination coordinates or stop IDs"}), 400
+        return jsonify({"status": "error", "message": "Please provide origin and destination coordinates or stop IDs"}), 200
 
     if "error" in result:
-        return jsonify({"status": "error", "message": result["error"]}), 404
+        return jsonify({"status": "error", "message": result["error"]}), 200
 
     return jsonify({"status": "success", "journey": result})
 
